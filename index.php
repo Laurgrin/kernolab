@@ -2,6 +2,13 @@
 
 require_once(__DIR__ . "/Autoload/Autoload.php");
 
+$request = $_SERVER['REQUEST_URI'];
+
+echo "<pre>";
+print_r($_SERVER);
+echo "</pre>";
+die();
+
 if (file_exists(__DIR__ . "/.env")) {
     $envContents = file_get_contents(__DIR__ . "/.env");
 } else {
@@ -27,3 +34,5 @@ try {
 echo "<pre>";
 print_r(mysqli_get_host_info($connection));
 echo "</pre>";
+
+
