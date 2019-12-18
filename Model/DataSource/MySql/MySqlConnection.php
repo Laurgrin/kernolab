@@ -1,10 +1,11 @@
 <?php
 
-namespace Model\DataSource;
+namespace Model\DataSource\MySql;
 
-require_once(__DIR__ . "/../../Autoload/Autoload.php");
+require_once(__DIR__ . "/../../../Autoload/Autoload.php");
 
 use Exception\MySqlConnectionException;
+use Model\DataSource\ConnectionInterface;
 
 class MySqlConnection implements ConnectionInterface
 {
@@ -19,6 +20,9 @@ class MySqlConnection implements ConnectionInterface
     
     /** @var string */
     protected $host;
+    
+    /** @var \mysqli */
+    protected $connection;
     
     /**
      * MySqlConnection constructor.
@@ -53,7 +57,26 @@ class MySqlConnection implements ConnectionInterface
                 "Unable to connect to the database. Error $errorNumber: $errorMessage"
             );
         }
+        $this->connection = $connection;
         
         return $connection;
+    }
+    
+    /**
+     * Destroy the connection once it is no longer used.
+     */
+    public function __destruct()
+    {
+        $this->disconnect($this->connection);
+    }
+    
+    /**
+     * Manually close the connection to the database..
+     *
+     * @param \mysqli $connection
+     */
+    public function disconnect(\mysqli $connection)
+    {
+        mysqli_close($connection);
     }
 }
