@@ -32,12 +32,15 @@ class MySqlConnection implements ConnectionInterface
      * @param $password
      * @param $database
      */
-    public function __construct($host, $user, $password, $database)
+    public function __construct()
     {
-        $this->host     = $host;
-        $this->user     = $user;
-        $this->password = $password;
-        $this->database = $database;
+        //TODO: Remove hardcoding of MySql DB
+        $credentials = json_decode($envContents, true)["db"];
+        
+        $this->host     = $credentials["host"];
+        $this->user     = $credentials["user"];
+        $this->password = $credentials["password"];
+        $this->database = $credentials["database"];
     }
     
     /**
@@ -60,14 +63,6 @@ class MySqlConnection implements ConnectionInterface
         $this->connection = $connection;
         
         return $connection;
-    }
-    
-    /**
-     * Destroy the connection once it is no longer used.
-     */
-    public function __destruct()
-    {
-        $this->disconnect($this->connection);
     }
     
     /**
