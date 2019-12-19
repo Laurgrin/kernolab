@@ -2,12 +2,10 @@
 
 namespace Model\DataSource\MySql;
 
-require_once(__DIR__ . "/../../../Autoload/Autoload.php");
-
 use Exception\MySqlConnectionException;
 use Model\DataSource\ConnectionInterface;
 
-class MySqlConnection implements ConnectionInterface
+class Connection implements ConnectionInterface
 {
     /** @var int */
     protected $user;
@@ -25,7 +23,7 @@ class MySqlConnection implements ConnectionInterface
     protected $connection;
     
     /**
-     * MySqlConnection constructor.
+     * Connection constructor.
      *
      * @param $host
      * @param $user
@@ -34,8 +32,7 @@ class MySqlConnection implements ConnectionInterface
      */
     public function __construct()
     {
-        //TODO: Remove hardcoding of MySql DB
-        $credentials = json_decode($envContents, true)["db"];
+        $credentials = json_decode(file_get_contents(ENV_PATH), true)["db"];
         
         $this->host     = $credentials["host"];
         $this->user     = $credentials["user"];

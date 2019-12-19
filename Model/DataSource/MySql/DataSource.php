@@ -3,10 +3,9 @@
 namespace Model\DataSource\MySql\Query;
 
 use Exception\MySqlPreparedStatementException;
+use Model\DataSource\ConnectionInterface;
 
-require_once(__DIR__ . "/../../../../Autoload/Autoload.php");
-
-class Query implements QueryInterface
+class DataSource implements DataSourceInterface
 {
     /**
      * @var \mysqli
@@ -24,13 +23,13 @@ class Query implements QueryInterface
     protected $statement;
     
     /**
-     * Query constructor.
+     * DataSource constructor.
      *
      * @param \mysqli $connection
      */
-    public function __construct(\mysqli $connection)
+    public function __construct(ConnectionInterface $connection)
     {
-        $this->connection = $connection;
+        $this->connection = $connection->connect();
     }
     
     /**
@@ -38,7 +37,7 @@ class Query implements QueryInterface
      *
      * @param $query
      *
-     * @return \Model\DataSource\MySql\Query\Query
+     * @return \Model\DataSource\MySql\Query\DataSource
      * @throws \Exception\MySqlPreparedStatementException
      */
     protected function prepare($query)
@@ -59,7 +58,7 @@ class Query implements QueryInterface
      * @param string       $types
      * @param string[]     $params
      *
-     * @return \Model\DataSource\MySql\Query\Query
+     * @return \Model\DataSource\MySql\Query\DataSource
      * @throws \Exception\MySqlPreparedStatementException
      */
     protected function bindParams(string $types, $params)
@@ -76,10 +75,10 @@ class Query implements QueryInterface
      *
      * @param \mysqli_stmt $statement
      *
-     * @return \Model\DataSource\MySql\Query\Query|\mysqli_stmt
+     * @return \Model\DataSource\MySql\Query\DataSource|\mysqli_stmt
      * @throws \Exception\MySqlPreparedStatementException
      */
-    protected function execute()
+    protected function executeStatement()
     {
         if (!$this->statement->execute()) {
             $this->throwException($this->statement, "An error occurred while executing the statement: ");
@@ -113,22 +112,22 @@ class Query implements QueryInterface
      * affected or the result set. Basically, it will return the results of the executed statement, regardless of
      * what statement it is.
      *
-     * @param string $query
+     * @param string $command
      * @param string $types
      * @param array  $args
      *
      * @return int|array
      * @throws \Exception\MySqlPreparedStatementException
      */
-    public function fetch(string $query, string $types = "", array $args = [])
+    public function execute(string $command, string $types = "", array $args = [])
     {
-        $this->prepare($query);
+        $this->prepare($command);
         
         /* Skip binding params if there are no params. */
         if (count($args)) {
             $this->bindParams($types, $args);
         }
-        $this->execute();
+        $this->executeStatement();
         
         /* If metadata is false AND there are no errors, it means it wasn't a select statement,
         and we can return affected rows instead. If there is an error, something went terribly wrong.
