@@ -1,0 +1,8 @@
+{
+    "name": "laurynas/kernolab",
+    "description": "Test task for Kernolab",
+    "type": "project",
+    "license": "Open",
+    "minimum-stability": "stable",
+    "require": {}
+}

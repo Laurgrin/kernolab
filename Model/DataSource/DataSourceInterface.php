@@ -14,4 +14,8 @@ interface DataSourceInterface
      * @return array|bool
      */
     public function executeStatement(string $command, string $types = "", array $args = []);
+    
+    public function get();
+    
+    public function set();
 }

@@ -4,9 +4,9 @@ namespace Exception;
 
 use Exception;
 
-class MySqlPreparedStatementException extends Exception
+class UnknownOperandException extends Exception
 {
-    public function __construct($message, $code = 4, Exception $previous = null) {
+    public function __construct($message, $code = 5, Exception $previous = null) {
         parent::__construct($message, $code, $previous);
     }
     
