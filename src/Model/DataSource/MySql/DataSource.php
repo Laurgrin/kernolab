@@ -38,6 +38,7 @@ class DataSource implements DataSourceInterface
      * @param $query
      *
      * @return \Kernolab\Model\DataSource\MySql\Query\DataSource
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
     protected function prepare($query)
     {
@@ -57,6 +58,7 @@ class DataSource implements DataSourceInterface
      * @param string[] $params
      *
      * @return \Kernolab\Model\DataSource\MySql\Query\DataSource
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
     protected function bindParams(string $types, $params)
     {
@@ -70,9 +72,12 @@ class DataSource implements DataSourceInterface
     /**
      * Executes a prepared statement.
      *
+     * @param string $command
+     *
      * @return \Kernolab\Model\DataSource\MySql\Query\DataSource
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    protected function executeStatement()
+    public function executeCommand(string $command)
     {
         if (!$this->statement->execute()) {
             $this->throwException($this->statement, "An error occurred while executing the statement: ");
@@ -113,7 +118,7 @@ class DataSource implements DataSourceInterface
      * @return int|array
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    public function execute(string $command, string $types = "", array $args = [])
+    protected function execute(string $command, string $types = "", array $args = [])
     {
         $this->prepare($command);
         
@@ -121,7 +126,7 @@ class DataSource implements DataSourceInterface
         if (count($args)) {
             $this->bindParams($types, $args);
         }
-        $this->executeStatement();
+        $this->executeCommand();
         
         /* If metadata is false AND there are no errors, it means it wasn't a select statement,
         and we can return affected rows instead. If there is an error, something went terribly wrong.

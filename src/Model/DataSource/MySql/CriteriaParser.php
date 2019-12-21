@@ -3,9 +3,10 @@
 namespace Kernolab\Model\DataSource\MySql;
 
 use Kernolab\Exception\UnknownOperandException;
-use Kernolab\Model\DataSource\CriteriaInterface;
+use Kernolab\Model\DataSource\Criteria;
+use Kernolab\Model\DataSource\CriteriaParserInterface;
 
-class Criteria implements CriteriaInterface
+class CriteriaParser implements CriteriaParserInterface
 {
     /**
      * @var string
@@ -13,7 +14,7 @@ class Criteria implements CriteriaInterface
     protected $table;
     
     /**
-     * Criteria constructor.
+     * CriteriaParser constructor.
      *
      * @param string $table
      */
@@ -26,12 +27,12 @@ class Criteria implements CriteriaInterface
      * Receives an associative array to create criteria. Basically, should parse it into a form the data source can
      * understand, such as a query for MySql.
      *
-     * @param array $criteria
+     * @param \Kernolab\Model\DataSource\Criteria[] $criteria
      *
      * @return array
      * @throws \Kernolab\Exception\UnknownOperandException
      */
-    public function parseCriteria(array $criteria): array
+    public function parseCriteria(array $criteria = []): array
     {
         $query = "SELECT * FROM `$this->table`";
         $params = [];
@@ -39,20 +40,19 @@ class Criteria implements CriteriaInterface
         if (!empty($criteria)) {
             $query .= " WHERE ";
             foreach ($criteria as $criterion) {
-                $query .= "`{$criterion["field"]}` ";
+                $query .= "`{$criterion->getField()}` ";
                 
                 /* Can add new operands as needed. */
-                switch ($criterion["operand"]) {
-                    case self::OPERAND_EQUALS:
+                switch ($criterion->getOperand()) {
+                    case Criteria::OPERAND_EQUALS:
                         $query .= "= ?";
                         break;
                     default:
                         throw new UnknownOperandException(
-                            "Operand {$criterion["operand"]} is not defined in " . __METHOD__
-                        );
+                            "Operand {$criterion->getOperand()} is not defined.");
                         break;
                 }
-                $params[$criterion["field"]] = $criterion["value"];
+                $params[$criterion->getField()] = $criterion->getValue();
                 $query .= " AND ";
             }
         }
@@ -64,9 +64,9 @@ class Criteria implements CriteriaInterface
     /**
      * @param string $table
      *
-     * @return Criteria
+     * @return CriteriaParser
      */
-    public function setTable(string $table): Criteria
+    public function setTable(string $table): CriteriaParser
     {
         $this->table = $table;
         

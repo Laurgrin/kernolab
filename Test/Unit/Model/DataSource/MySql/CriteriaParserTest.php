@@ -3,16 +3,17 @@
 namespace Test\Unit\Model\DataSource\MySql;
 
 use Kernolab\Exception\UnknownOperandException;
-use Kernolab\Model\DataSource\MySql\Criteria;
+use Kernolab\Model\DataSource\Criteria;
+use Kernolab\Model\DataSource\MySql\CriteriaParser;
 use PHPUnit\Framework\TestCase;
 
-class CriteriaTest extends TestCase
+class CriteriaParserTest extends TestCase
 {
     private $criteria;
     
     protected function setUp(): void
     {
-        $this->criteria = new Criteria("mock_table");
+        $this->criteria = new CriteriaParser("mock_table");
     }
     
     protected function tearDown(): void
@@ -37,13 +38,7 @@ class CriteriaTest extends TestCase
     
     public function testParseCriteriaException()
     {
-        $input = [
-            [
-                "field"   => "id",
-                "operand" => "ez",
-                "value"   => 3,
-            ],
-        ];
+        $input = [new Criteria("id", "ez", 3),];
         
         $this->expectException(UnknownOperandException::class);
         $this->criteria->parseCriteria($input);
@@ -61,11 +56,7 @@ class CriteriaTest extends TestCase
             ],
             "one criteria" => [
                 [
-                    [
-                        "field"   => "id",
-                        "operand" => "eq",
-                        "value"   => 3,
-                    ],
+                    new Criteria("id", "eq", 3),
                 ],
                 [
                     "query" => "SELECT * FROM `mock_table` WHERE `id` = ?",
@@ -74,16 +65,8 @@ class CriteriaTest extends TestCase
             ],
             "multiple criteria" => [
                 [
-                    [
-                        "field"   => "id",
-                        "operand" => "eq",
-                        "value"   => 3,
-                    ],
-                    [
-                        "field"   => "sex",
-                        "operand" => "eq",
-                        "value"   => "male",
-                    ]
+                    new Criteria("id", "eq", 3),
+                    new Criteria("sex", "eq", "male")
                 ],
                 [
                     "query" => "SELECT * FROM `mock_table` WHERE `id` = ? AND `sex` = ?",

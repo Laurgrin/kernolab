@@ -2,20 +2,25 @@
 
 namespace Kernolab\Model\DataSource\MySql\Query;
 
+use Kernolab\Model\EntityInterface;
+
 interface DataSourceInterface
 {
     /**
-     * Executes a command on a data source and returns the result.
+     * Gets data from data source.
      *
-     * @param string $command
-     * @param string $types
-     * @param array  $args
+     * @param \Kernolab\Model\DataSource\CriteriaParserInterface[] $criteria
      *
-     * @return array|bool
+     * @return mixed
      */
-    public function executeStatement(string $command, string $types = "", array $args = []);
+    public function get(array $criteria = []);
     
-    public function get();
-    
-    public function set();
+    /**
+     * Saves entities to DataSource
+     *
+     * @param EntityInterface[] $entities
+     *
+     * @return mixed
+     */
+    public function set(array $entities);
 }
