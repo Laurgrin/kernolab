@@ -9,7 +9,7 @@ interface DataSourceInterface
     /**
      * Gets data from data source.
      *
-     * @param \Kernolab\Model\DataSource\CriteriaParserInterface[] $criteria
+     * @param \Kernolab\Model\DataSource\Criteria[] $criteria
      *
      * @return mixed
      */

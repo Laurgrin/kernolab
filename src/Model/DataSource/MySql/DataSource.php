@@ -1,9 +1,11 @@
 <?php
 
-namespace Kernolab\Model\DataSource\MySql\Query;
+namespace Kernolab\Model\DataSource\MySql;
 
+use Kernolab\Exception\MySqlConnectionException;
 use Kernolab\Exception\MySqlPreparedStatementException;
-use Kernolab\Model\DataSource\ConnectionInterface;
+use Kernolab\Model\DataSource\MySql\Query\DataSourceInterface;
+use Kernolab\Model\EntityInterface;
 
 class DataSource implements DataSourceInterface
 {
@@ -25,11 +27,41 @@ class DataSource implements DataSourceInterface
     /**
      * DataSource constructor.
      *
-     * @param \mysqli $connection
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
-    public function __construct(ConnectionInterface $connection)
+    public function __construct()
     {
-        $this->connection = $connection->connect();
+        $credentials = json_decode(file_get_contents(ENV_PATH), true)["db"];
+    
+        $this->setConnection($credentials);
+    }
+    
+    /**
+     * Connects to the databse
+     *
+     * @param array $credentials
+     *
+     * @throws \Kernolab\Exception\MySqlConnectionException
+     */
+    protected function setConnection(array $credentials)
+    {
+        $connection = mysqli_connect(
+            $credentials["host"],
+            $credentials["user"],
+            $credentials["password"],
+            $credentials["database"]
+        );
+    
+        if (!$connection) {
+            $errorNumber = mysqli_connect_errno();
+            $errorMessage = mysqli_connect_error();
+            throw new MySqlConnectionException(
+                "Unable to connect to the database. Error $errorNumber: $errorMessage"
+            );
+        }
+        $this->connection = $connection;
+    
+        $this->connection = $connection;
     }
     
     /**
@@ -37,7 +69,7 @@ class DataSource implements DataSourceInterface
      *
      * @param $query
      *
-     * @return \Kernolab\Model\DataSource\MySql\Query\DataSource
+     * @return \Kernolab\Model\DataSource\MySql\DataSource
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
     protected function prepare($query)
@@ -57,7 +89,7 @@ class DataSource implements DataSourceInterface
      * @param string   $types
      * @param string[] $params
      *
-     * @return \Kernolab\Model\DataSource\MySql\Query\DataSource
+     * @return \Kernolab\Model\DataSource\MySql\DataSource
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
     protected function bindParams(string $types, $params)
@@ -72,12 +104,10 @@ class DataSource implements DataSourceInterface
     /**
      * Executes a prepared statement.
      *
-     * @param string $command
-     *
-     * @return \Kernolab\Model\DataSource\MySql\Query\DataSource
+     * @return \Kernolab\Model\DataSource\MySql\DataSource
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    public function executeCommand(string $command)
+    public function executeCommand()
     {
         if (!$this->statement->execute()) {
             $this->throwException($this->statement, "An error occurred while executing the statement: ");
@@ -138,5 +168,30 @@ class DataSource implements DataSourceInterface
         }
         
         return $this->statement->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+    
+    
+    /**
+     * Gets data from data source.
+     *
+     * @param \Kernolab\Model\DataSource\Criteria[] $criteria
+     *
+     * @return mixed
+     */
+    public function get(array $criteria = [])
+    {
+        // TODO: Implement get() method.
+    }
+    
+    /**
+     * Saves entities to DataSource
+     *
+     * @param EntityInterface[] $entities
+     *
+     * @return mixed
+     */
+    public function set(array $entities)
+    {
+        // TODO: Implement set() method.
     }
 }
