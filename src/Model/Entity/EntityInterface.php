@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernolab\Model;
+namespace Kernolab\Model\Entity;
 
 interface EntityInterface
 {

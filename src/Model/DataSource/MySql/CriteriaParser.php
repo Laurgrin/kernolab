@@ -18,7 +18,7 @@ class CriteriaParser implements CriteriaParserInterface
      *
      * @param string $table
      */
-    public function __construct(string $table)
+    public function __construct(string $table = "")
     {
         $this->setTable($table);
     }

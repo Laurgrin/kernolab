@@ -4,8 +4,8 @@ namespace Kernolab\Model\DataSource\MySql;
 
 use Kernolab\Exception\MySqlConnectionException;
 use Kernolab\Exception\MySqlPreparedStatementException;
-use Kernolab\Model\DataSource\MySql\Query\DataSourceInterface;
-use Kernolab\Model\EntityInterface;
+use Kernolab\Model\DataSource\CriteriaParserInterface;
+use Kernolab\Model\Entity\EntityInterface;
 
 class DataSource implements DataSourceInterface
 {
@@ -25,19 +25,35 @@ class DataSource implements DataSourceInterface
     protected $statement;
     
     /**
+     * @var CriteriaParserInterface
+     */
+    protected $criteriaParser;
+    
+    /**
+     * @var string
+     */
+    protected $table;
+    
+    /**
      * DataSource constructor.
+     *
+     * @param CriteriaParserInterface $criteriaParser
+     *
+     * @param string                  $table
      *
      * @throws \Kernolab\Exception\MySqlConnectionException
      */
-    public function __construct()
+    public function __construct(CriteriaParserInterface $criteriaParser, string $table)
     {
         $credentials = json_decode(file_get_contents(ENV_PATH), true)["db"];
-    
         $this->setConnection($credentials);
+        $this->setTable($table);
+        
+        $this->criteriaParser = $criteriaParser;
     }
     
     /**
-     * Connects to the databse
+     * Connects to the database and sets the connection handle
      *
      * @param array $credentials
      *
@@ -51,16 +67,15 @@ class DataSource implements DataSourceInterface
             $credentials["password"],
             $credentials["database"]
         );
-    
+        
         if (!$connection) {
-            $errorNumber = mysqli_connect_errno();
+            $errorNumber  = mysqli_connect_errno();
             $errorMessage = mysqli_connect_error();
             throw new MySqlConnectionException(
                 "Unable to connect to the database. Error $errorNumber: $errorMessage"
             );
         }
-        $this->connection = $connection;
-    
+        
         $this->connection = $connection;
     }
     
@@ -170,17 +185,25 @@ class DataSource implements DataSourceInterface
         return $this->statement->get_result()->fetch_all(MYSQLI_ASSOC);
     }
     
-    
     /**
      * Gets data from data source.
      *
      * @param \Kernolab\Model\DataSource\Criteria[] $criteria
      *
      * @return mixed
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
     public function get(array $criteria = [])
     {
-        // TODO: Implement get() method.
+        $parsedCriteria = $this->criteriaParser->parseCriteria($criteria);
+        $command        = $parsedCriteria["query"];
+        
+        /* For sanity's sake, every bound parameter will be considered a string */
+        $types = str_repeat("s", count($parsedCriteria["args"]));
+        
+        $result = $this->execute($command, $types, $parsedCriteria["args"]);
+        
+        return $result;
     }
     
     /**
@@ -188,10 +211,81 @@ class DataSource implements DataSourceInterface
      *
      * @param EntityInterface[] $entities
      *
-     * @return mixed
+     * @return bool
      */
-    public function set(array $entities)
+    public function set(array $entities): bool
     {
-        // TODO: Implement set() method.
+        $command = "INSERT INTO `$this->table` ";
+        
+        $dataArray = $this->getFields($entities);
+        $keys      = array_keys($dataArray);
+        $values    = array_values($dataArray);
+        
+        
+    }
+    
+    /**
+     * Returns an associate array of the entity properties using reflection.
+     *
+     * @param EntityInterface[] $entities
+     *
+     * @return array
+     */
+    protected function getFields(array $entities): array
+    {
+        $dataArray = [];
+        
+        foreach ($entities as $entity) {
+            $entityProperties = [];
+            try {
+                $reflection = new \ReflectionClass($entity);
+            } catch (\ReflectionException $e) {
+                echo $e->getMessage() . PHP_EOL;
+                continue;
+            }
+            $properties = $reflection->getProperties();
+            
+            foreach ($properties as $property) {
+                $property->setAccessible(true);
+                $name  = $this->toSnakeCase($property->getName());
+                $value = $property->getValue($entity);
+                
+                $entityProperties[$name] = $property->getValue($value);
+            }
+            
+            $dataArray[] = $entityProperties;
+        }
+        
+        return $dataArray;
+    }
+    
+    /**
+     * Converts a string from camelCase to snake_case
+     *
+     * @param string $name
+     *
+     * @return string
+     */
+    protected function toSnakeCase(string $name): string
+    {
+        $name[0]  = strtolower($name[0]);
+        $function = function($char) {
+            return "_" . strtolower($char[1]);
+        };
+        
+        return preg_replace_callback(
+            '/([A-Z])/',
+            $function,
+            $name
+        );
+    }
+    
+    /**
+     * @param string $table
+     */
+    public function setTable(string $table): void
+    {
+        $this->table = $table;
+        $this->criteriaParser->setTable($table);
     }
 }

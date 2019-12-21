@@ -1,6 +1,8 @@
 <?php
 
-namespace Kernolab\Model;
+namespace Kernolab\Model\Entity\Transaction;
+
+use Kernolab\Model\Entity\EntityInterface;
 
 class Transaction implements EntityInterface
 {
@@ -60,47 +62,6 @@ class Transaction implements EntityInterface
     protected $transactionCurrency;
     
     /**
-     * Transaction constructor.
-     *
-     * @param $transactionId
-     * @param $userId
-     * @param $transactionStatus
-     * @param $transactionFee
-     * @param $createdAt
-     * @param $updatedAt
-     * @param $transactionProvider
-     * @param $transactionAmount
-     * @param $transactionRecipientId
-     * @param $transactionRecipientName
-     * @param $transactionCurrency
-     */
-    public function __construct(
-        $transactionId,
-        $userId,
-        $transactionStatus,
-        $transactionFee,
-        $createdAt,
-        $updatedAt,
-        $transactionProvider,
-        $transactionAmount,
-        $transactionRecipientId,
-        $transactionRecipientName,
-        $transactionCurrency
-    ) {
-        $this->transactionId            = $transactionId;
-        $this->userId                   = $userId;
-        $this->transactionStatus        = $transactionStatus;
-        $this->transactionFee           = $transactionFee;
-        $this->createdAt                = $createdAt;
-        $this->updatedAt                = $updatedAt;
-        $this->transactionProvider      = $transactionProvider;
-        $this->transactionAmount        = $transactionAmount;
-        $this->transactionRecipientId   = $transactionRecipientId;
-        $this->transactionRecipientName = $transactionRecipientName;
-        $this->transactionCurrency      = $transactionCurrency;
-    }
-    
-    /**
      * Returns the entity's ID (primary key).
      *
      * @return string
@@ -149,7 +110,7 @@ class Transaction implements EntityInterface
     /**
      * @param string $transactionStatus
      *
-     * @return \Kernolab\Model\Transaction
+     * @return \Kernolab\Model\Entity\Transaction\Transaction
      */
     public function setTransactionStatus($transactionStatus)
     {
@@ -216,5 +177,109 @@ class Transaction implements EntityInterface
     public function getTransactionCurrency()
     {
         return $this->transactionCurrency;
+    }
+    
+    /**
+     * @param int $transactionId
+     *
+     * @return Transaction
+     */
+    public function setTransactionId(int $transactionId): Transaction
+    {
+        $this->transactionId = $transactionId;
+        
+        return $this;
+    }
+    
+    /**
+     * @return int
+     */
+    public function getTransactionId(): int
+    {
+        return $this->transactionId;
+    }
+    
+    /**
+     * @param int $userId
+     *
+     * @return Transaction
+     */
+    public function setUserId(int $userId): Transaction
+    {
+        $this->userId = $userId;
+        
+        return $this;
+    }
+    
+    /**
+     * @param float $transactionFee
+     *
+     * @return Transaction
+     */
+    public function setTransactionFee(float $transactionFee): Transaction
+    {
+        $this->transactionFee = $transactionFee;
+        
+        return $this;
+    }
+    
+    /**
+     * @param string $transactionProvider
+     *
+     * @return Transaction
+     */
+    public function setTransactionProvider(string $transactionProvider): Transaction
+    {
+        $this->transactionProvider = $transactionProvider;
+        
+        return $this;
+    }
+    
+    /**
+     * @param float $transactionAmount
+     *
+     * @return Transaction
+     */
+    public function setTransactionAmount(float $transactionAmount): Transaction
+    {
+        $this->transactionAmount = $transactionAmount;
+        
+        return $this;
+    }
+    
+    /**
+     * @param int $transactionRecipientId
+     *
+     * @return Transaction
+     */
+    public function setTransactionRecipientId(int $transactionRecipientId): Transaction
+    {
+        $this->transactionRecipientId = $transactionRecipientId;
+        
+        return $this;
+    }
+    
+    /**
+     * @param string $transactionRecipientName
+     *
+     * @return Transaction
+     */
+    public function setTransactionRecipientName(string $transactionRecipientName): Transaction
+    {
+        $this->transactionRecipientName = $transactionRecipientName;
+        
+        return $this;
+    }
+    
+    /**
+     * @param string $transactionCurrency
+     *
+     * @return Transaction
+     */
+    public function setTransactionCurrency(string $transactionCurrency): Transaction
+    {
+        $this->transactionCurrency = $transactionCurrency;
+        
+        return $this;
     }
 }

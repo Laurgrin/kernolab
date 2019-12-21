@@ -1,8 +1,8 @@
 <?php
 
-namespace Kernolab\Model\DataSource\MySql\Query;
+namespace Kernolab\Model\DataSource\MySql;
 
-use Kernolab\Model\EntityInterface;
+use Kernolab\Model\Entity\EntityInterface;
 
 interface DataSourceInterface
 {
@@ -20,7 +20,7 @@ interface DataSourceInterface
      *
      * @param EntityInterface[] $entities
      *
-     * @return mixed
+     * @return bool
      */
-    public function set(array $entities);
+    public function set(array $entities): bool;
 }
