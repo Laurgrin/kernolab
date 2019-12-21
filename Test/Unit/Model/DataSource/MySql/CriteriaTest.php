@@ -2,6 +2,7 @@
 
 namespace Test\Unit\Model\DataSource\MySql;
 
+use Kernolab\Exception\UnknownOperandException;
 use Kernolab\Model\DataSource\MySql\Criteria;
 use PHPUnit\Framework\TestCase;
 
@@ -32,6 +33,20 @@ class CriteriaTest extends TestCase
         $result = $this->criteria->parseCriteria($input);
         
         $this->assertEquals($expected, $result);
+    }
+    
+    public function testParseCriteriaException()
+    {
+        $input = [
+            [
+                "field"   => "id",
+                "operand" => "ez",
+                "value"   => 3,
+            ],
+        ];
+        
+        $this->expectException(UnknownOperandException::class);
+        $this->criteria->parseCriteria($input);
     }
     
     public function parseCriteriaProvider()
