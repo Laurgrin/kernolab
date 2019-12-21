@@ -1,12 +1,12 @@
 <?php
 
-namespace Exception;
+namespace Kernolab\Exception;
 
 use Exception;
 
-class MySqlPreparedStatementException extends Exception
+class EnvFileNotFoundException extends Exception
 {
-    public function __construct($message, $code = 4, Exception $previous = null) {
+    public function __construct($message, $code = 3, Exception $previous = null) {
         parent::__construct($message, $code, $previous);
     }
     

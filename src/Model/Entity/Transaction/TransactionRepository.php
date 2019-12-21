@@ -1,14 +1,14 @@
 <?php
 
-namespace Model\DataSource\MySql;
+namespace Kernolab\Model\DataSource\MySql;
 
-use Model\DataSource\MySql\Query\DataSourceInterface;
-use Model\EntityInterface;
+use Kernolab\Model\DataSource\MySql\Query\DataSourceInterface;
+use Kernolab\Model\EntityInterface;
 
 class TransactionRepository implements RepositoryInterface
 {
     /**
-     * @var \Model\DataSource\MySql\Query\DataSourceInterface
+     * @var \Kernolab\Model\DataSource\MySql\Query\DataSourceInterface
      */
     protected $query;
     
@@ -20,7 +20,7 @@ class TransactionRepository implements RepositoryInterface
     /**
      * Saves the entity to the database.
      *
-     * @param \Model\EntityInterface $entity
+     * @param \Kernolab\Model\EntityInterface $entity
      *
      * @return mixed
      */
@@ -32,7 +32,7 @@ class TransactionRepository implements RepositoryInterface
     /**
      * Gets all rows from the database.
      *
-     * @return EntityInterface
+     * @return void
      */
     public function get()
     {

@@ -4,5 +4,16 @@
     "type": "project",
     "license": "Open",
     "minimum-stability": "stable",
-    "require": {}
+    "require": {
+        "ext-json": "*",
+        "ext-mysqli": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Kernolab\\": "src/"
+        }
+    }
 }

@@ -6,7 +6,7 @@
  * Time: 15:55
  */
 
-namespace Exception;
+namespace Kernolab\Exception;
 
 use Exception;
 

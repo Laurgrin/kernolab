@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<phpunit bootstrap="index.php" cacheResult="false">
+<phpunit bootstrap="vendor/autoload.php" cacheResult="false">
     <testsuites>
         <testsuite name="unit">
             <directory>Test/Unit</directory>

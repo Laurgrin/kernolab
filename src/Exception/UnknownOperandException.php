@@ -1,6 +1,6 @@
 <?php
 
-namespace Exception;
+namespace Kernolab\Exception;
 
 use Exception;
 

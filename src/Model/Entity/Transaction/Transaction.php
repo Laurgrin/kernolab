@@ -1,8 +1,6 @@
 <?php
 
-namespace Model;
-
-require_once(__DIR__ . "/../Autoload/Autoload.php");
+namespace Kernolab\Model;
 
 class Transaction implements EntityInterface
 {
@@ -151,7 +149,7 @@ class Transaction implements EntityInterface
     /**
      * @param string $transactionStatus
      *
-     * @return \Model\Transaction
+     * @return \Kernolab\Model\Transaction
      */
     public function setTransactionStatus($transactionStatus)
     {

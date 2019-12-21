@@ -1,9 +1,9 @@
 <?php
 
-namespace Model\DataSource\MySql;
+namespace Kernolab\Model\DataSource\MySql;
 
-use Exception\MySqlConnectionException;
-use Model\DataSource\ConnectionInterface;
+use Kernolab\Exception\MySqlConnectionException;
+use Kernolab\Model\DataSource\ConnectionInterface;
 
 class Connection implements ConnectionInterface
 {
@@ -44,7 +44,7 @@ class Connection implements ConnectionInterface
      * Connects to or otherwise accesses the data from the data source and returns it.
      *
      * @return mixed
-     * @throws \Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function connect()
     {

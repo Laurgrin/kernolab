@@ -2,8 +2,8 @@
 
 namespace Model\DataSource\MySql;
 
-use Exception\UnknownOperandException;
-use Model\DataSource\CriteriaInterface;
+use Kernolab\Exception\UnknownOperandException;
+use Kernolab\Model\DataSource\CriteriaInterface;
 
 class Criteria implements CriteriaInterface
 {
@@ -29,7 +29,7 @@ class Criteria implements CriteriaInterface
      * @param array $criteria
      *
      * @return array
-     * @throws \Exception\UnknownOperandException
+     * @throws \Kernolab\Exception\UnknownOperandException
      */
     public function parseCriteria(array $criteria): array
     {

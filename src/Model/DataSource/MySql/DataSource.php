@@ -1,9 +1,9 @@
 <?php
 
-namespace Model\DataSource\MySql\Query;
+namespace Kernolab\Model\DataSource\MySql\Query;
 
-use Exception\MySqlPreparedStatementException;
-use Model\DataSource\ConnectionInterface;
+use Kernolab\Exception\MySqlPreparedStatementException;
+use Kernolab\Model\DataSource\ConnectionInterface;
 
 class DataSource implements DataSourceInterface
 {
@@ -37,8 +37,7 @@ class DataSource implements DataSourceInterface
      *
      * @param $query
      *
-     * @return \Model\DataSource\MySql\Query\DataSource
-     * @throws \Exception\MySqlPreparedStatementException
+     * @return \Kernolab\Model\DataSource\MySql\Query\DataSource
      */
     protected function prepare($query)
     {
@@ -54,12 +53,10 @@ class DataSource implements DataSourceInterface
     /**
      * Binds params to a statement. Amount of types must match params.
      *
-     * @param \mysqli_stmt $statement
-     * @param string       $types
-     * @param string[]     $params
+     * @param string   $types
+     * @param string[] $params
      *
-     * @return \Model\DataSource\MySql\Query\DataSource
-     * @throws \Exception\MySqlPreparedStatementException
+     * @return \Kernolab\Model\DataSource\MySql\Query\DataSource
      */
     protected function bindParams(string $types, $params)
     {
@@ -73,10 +70,7 @@ class DataSource implements DataSourceInterface
     /**
      * Executes a prepared statement.
      *
-     * @param \mysqli_stmt $statement
-     *
-     * @return \Model\DataSource\MySql\Query\DataSource|\mysqli_stmt
-     * @throws \Exception\MySqlPreparedStatementException
+     * @return \Kernolab\Model\DataSource\MySql\Query\DataSource
      */
     protected function executeStatement()
     {
@@ -94,7 +88,7 @@ class DataSource implements DataSourceInterface
      * @param string       $contextMessage
      *
      * @return void
-     * @throws \Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
     protected function throwException($statement, string $contextMessage)
     {
@@ -117,7 +111,7 @@ class DataSource implements DataSourceInterface
      * @param array  $args
      *
      * @return int|array
-     * @throws \Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
     public function execute(string $command, string $types = "", array $args = [])
     {

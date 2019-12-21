@@ -1,7 +1,6 @@
 <?php
 
-namespace Model\DataSource;
-
+namespace Kernolab\Model\DataSource;
 
 interface CriteriaInterface
 {

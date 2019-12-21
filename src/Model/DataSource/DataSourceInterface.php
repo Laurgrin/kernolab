@@ -1,6 +1,6 @@
 <?php
 
-namespace Model\DataSource\MySql\Query;
+namespace Kernolab\Model\DataSource\MySql\Query;
 
 interface DataSourceInterface
 {

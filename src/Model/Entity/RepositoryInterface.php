@@ -1,15 +1,15 @@
 <?php
 
-namespace Model\DataSource\MySql;
+namespace Kernolab\Model\DataSource\MySql;
 
-use Model\EntityInterface;
+use Kernolab\Model\EntityInterface;
 
 interface RepositoryInterface
 {
     /**
      * Saves the entity to the database.
      *
-     * @param \Model\EntityInterface $entity
+     * @param \Kernolab\Model\EntityInterface $entity
      *
      * @return mixed
      */
