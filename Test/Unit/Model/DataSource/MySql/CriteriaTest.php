@@ -2,7 +2,7 @@
 
 namespace Test\Unit\Model\DataSource\MySql;
 
-use Model\DataSource\MySql\Criteria;
+use Kernolab\Model\DataSource\MySql\Criteria;
 use PHPUnit\Framework\TestCase;
 
 class CriteriaTest extends TestCase
@@ -19,23 +19,62 @@ class CriteriaTest extends TestCase
         $this->criteria = null;
     }
     
-    public function testParseCriteria()
+    /**
+     * @dataProvider parseCriteriaProvider
+     *
+     * @param $input
+     * @param $expected
+     *
+     * @throws \Kernolab\Exception\UnknownOperandException
+     */
+    public function testParseCriteria($input, $expected)
     {
-        $input = [
-            [
-                "field"   => "id",
-                "operand" => "eq",
-                "value"   => 3,
-            ],
-        ];
-        
-        $expected = [
-            "query" => "SELECT * FROM `mock_table` WHERE ``",
-            "args"  => ["id" => 3],
-        ];
-        
         $result = $this->criteria->parseCriteria($input);
         
         $this->assertEquals($expected, $result);
+    }
+    
+    public function parseCriteriaProvider()
+    {
+        return [
+            "zero criteria" => [
+                [],
+                [
+                    "query" => "SELECT * FROM `mock_table`",
+                    "args"  => [],
+                ]
+            ],
+            "one criteria" => [
+                [
+                    [
+                        "field"   => "id",
+                        "operand" => "eq",
+                        "value"   => 3,
+                    ],
+                ],
+                [
+                    "query" => "SELECT * FROM `mock_table` WHERE `id` = ?",
+                    "args"  => ["id" => 3],
+                ],
+            ],
+            "multiple criteria" => [
+                [
+                    [
+                        "field"   => "id",
+                        "operand" => "eq",
+                        "value"   => 3,
+                    ],
+                    [
+                        "field"   => "sex",
+                        "operand" => "eq",
+                        "value"   => "male",
+                    ]
+                ],
+                [
+                    "query" => "SELECT * FROM `mock_table` WHERE `id` = ? AND `sex` = ?",
+                    "args"  => ["id" => 3, "sex" => "male"],
+                ],
+            ]
+        ];
     }
 }

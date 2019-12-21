@@ -1,6 +1,6 @@
 <?php
 
-namespace Model\DataSource\MySql;
+namespace Kernolab\Model\DataSource\MySql;
 
 use Kernolab\Exception\UnknownOperandException;
 use Kernolab\Model\DataSource\CriteriaInterface;
@@ -44,7 +44,7 @@ class Criteria implements CriteriaInterface
                 /* Can add new operands as needed. */
                 switch ($criterion["operand"]) {
                     case self::OPERAND_EQUALS:
-                        $query .= self::OPERAND_EQUALS . " ? ";
+                        $query .= "= ?";
                         break;
                     default:
                         throw new UnknownOperandException(
@@ -56,7 +56,7 @@ class Criteria implements CriteriaInterface
                 $query .= " AND ";
             }
         }
-        $query = ltrim($query, "AND");
+        $query = rtrim($query, " AND");
         
         return ["query" => $query, "args" => $params];
     }
