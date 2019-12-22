@@ -62,6 +62,38 @@ class Transaction implements EntityInterface
     protected $transactionCurrency;
     
     /**
+     * Transaction constructor.
+     *
+     * @param string $userId
+     * @param string $transactionStatus
+     * @param float  $transactionFee
+     * @param string $transactionProvider
+     * @param float  $transactionAmount
+     * @param int    $transactionRecipientId
+     * @param string $transactionRecipientName
+     * @param string $transactionCurrency
+     */
+    public function __construct(
+        string $userId,
+        string $transactionStatus,
+        float $transactionFee,
+        string $transactionProvider,
+        float $transactionAmount,
+        int $transactionRecipientId,
+        string $transactionRecipientName,
+        string $transactionCurrency
+    ) {
+        $this->userId                   = $userId;
+        $this->transactionStatus        = $transactionStatus;
+        $this->transactionFee           = $transactionFee;
+        $this->transactionProvider      = $transactionProvider;
+        $this->transactionAmount        = $transactionAmount;
+        $this->transactionRecipientId   = $transactionRecipientId;
+        $this->transactionRecipientName = $transactionRecipientName;
+        $this->transactionCurrency      = $transactionCurrency;
+    }
+    
+    /**
      * Returns the entity's ID (primary key).
      *
      * @return string
