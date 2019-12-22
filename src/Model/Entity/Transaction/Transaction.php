@@ -64,6 +64,7 @@ class Transaction implements EntityInterface
     /**
      * Transaction constructor.
      *
+     * @param int    $entityId
      * @param string $userId
      * @param string $transactionStatus
      * @param float  $transactionFee
@@ -74,6 +75,7 @@ class Transaction implements EntityInterface
      * @param string $transactionCurrency
      */
     public function __construct(
+        int $entityId,
         string $userId,
         string $transactionStatus,
         float $transactionFee,
@@ -83,6 +85,7 @@ class Transaction implements EntityInterface
         string $transactionRecipientName,
         string $transactionCurrency
     ) {
+        $this->entityId                 = $entityId;
         $this->userId                   = $userId;
         $this->transactionStatus        = $transactionStatus;
         $this->transactionFee           = $transactionFee;

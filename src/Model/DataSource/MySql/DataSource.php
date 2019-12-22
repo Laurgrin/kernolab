@@ -4,9 +4,10 @@ namespace Kernolab\Model\DataSource\MySql;
 
 use Kernolab\Exception\MySqlConnectionException;
 use Kernolab\Exception\MySqlPreparedStatementException;
-use Kernolab\Model\DataSource\CriteriaParserInterface;
+use Kernolab\Model\DataSource\QueryGeneratorInterface;
 use Kernolab\Model\DataSource\DataSourceInterface;
 use Kernolab\Model\Entity\EntityInterface;
+use src\Model\Entity\EntityParserInterface;
 
 class DataSource implements DataSourceInterface
 {
@@ -16,40 +17,30 @@ class DataSource implements DataSourceInterface
     protected $connection;
     
     /**
-     * @var int
+     * @var QueryGeneratorInterface
      */
-    protected $affectedRows = 0;
+    protected $queryGenerator;
     
     /**
-     * @var \mysqli_stmt
+     * @var \src\Model\Entity\EntityParserInterface
      */
-    protected $statement;
-    
-    /**
-     * @var CriteriaParserInterface
-     */
-    protected $criteriaParser;
-    
-    /**
-     * @var string
-     */
-    protected $table;
+    protected $entityParser;
     
     /**
      * DataSource constructor.
      *
-     * @param CriteriaParserInterface $criteriaParser
+     * @param QueryGeneratorInterface                 $criteriaParser
      *
-     * @param string                  $table
+     * @param \src\Model\Entity\EntityParserInterface $entityParser
      *
      * @throws \Kernolab\Exception\MySqlConnectionException
      */
-    public function __construct(CriteriaParserInterface $criteriaParser, string $table)
+    public function __construct(QueryGeneratorInterface $criteriaParser, EntityParserInterface $entityParser)
     {
-        $credentials = json_decode(file_get_contents(ENV_PATH), true)["db"];
+        $credentials          = json_decode(file_get_contents(ENV_PATH), true)["db"];
+        $this->queryGenerator = $criteriaParser;
+        $this->entityParser   = $entityParser;
         $this->setConnection($credentials);
-        $this->criteriaParser = $criteriaParser;
-        $this->setTable($table);
     }
     
     /**
@@ -167,9 +158,9 @@ class DataSource implements DataSourceInterface
         /* If metadata is false AND there are no errors, it means it wasn't a select statement,
         and we can return affected rows instead. If there is an error, something went terribly wrong.
         If we have metadata, it means it was a SELECT statement (or SHOW, EXPLAIN, etc.), then we return that. */
-        if (!$statement->result_metadata() && empty($this->statement->error_list)) {
+        if (!$statement->result_metadata() && empty($statement->error_list)) {
             return $statement->affected_rows;
-        } elseif (!$statement->result_metadata() && empty($this->statement->error_list)) {
+        } elseif (!$statement->result_metadata() && empty($statement->error_list)) {
             $this->throwException($statement, "Error while trying to check metadata: ");
         }
         
@@ -186,12 +177,14 @@ class DataSource implements DataSourceInterface
      *
      * @param \Kernolab\Model\DataSource\Criteria[] $criteria
      *
+     * @param string                                $table
+     *
      * @return mixed
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    public function get(array $criteria = [])
+    public function get(array $criteria = [], string $table = "")
     {
-        $parsedCriteria = $this->criteriaParser->parseCriteria($criteria);
+        $parsedCriteria = $this->queryGenerator->parseRetrieval($criteria);
         $command        = $parsedCriteria["query"];
         
         $result = $this->getResult(
@@ -210,134 +203,30 @@ class DataSource implements DataSourceInterface
      */
     public function set(array $entities): bool
     {
-        $dataArray    = $this->getFields($entities);
+        $dataArray    = $this->entityParser->getEntityProperties($entities);
         $affectedRows = 0;
         
         /* Get the columns for query generation. All of them will be the same, so we grab it from the first element. */
         $columns      = array_keys($dataArray[0]);
         $skipEntityId = $dataArray[0]["entity_id"] == 0;
-        $query        = $this->generateInsertQuery($columns, $skipEntityId);
+        $query        = $this->queryGenerator->parseInsertion($this->entityParser->getEntityTarget($entities[0]), $columns);
         try {
             $statement = $this->prepare($query);
-    
+            
             foreach ($dataArray as $column => $value) {
                 if ($skipEntityId) {
                     unset($value["entity_id"]);
                 }
-        
+                
                 $statement    = $this->bindParams($statement, array_values($value));
                 $affectedRows += $this->getResult($this->executeStatement($statement));
             }
         } catch (MySqlPreparedStatementException $e) {
             echo $e->getMessage() . PHP_EOL;
+            
             return false;
         }
         
         return true;
-    }
-    
-    /**
-     * Generates an insert query from an array of entities.
-     *
-     * @param array $columns
-     * @param bool  $skipEntityId
-     *
-     * @return string
-     */
-    protected function generateInsertQuery(array $columns, bool $skipEntityId = false): string
-    {
-        /* If entity id is 0, we skip the first iteration as to not write the entity id into the query. */
-        $iterator = 0;
-        if ($skipEntityId) {
-            $iterator = 1;
-        }
-        
-        $columnsString = "";
-        $valuesString  = "";
-        $updateString  = "";
-        for ($i = $iterator; $i < count($columns); $i++) {
-            $columnsString .= "`{$columns[$i]}`, ";
-            $valuesString  .= "?, ";
-            $updateString  .= "`{$columns[$i]}` = VALUES(`{$columns[$i]}`), ";
-        }
-        
-        $columnsQuery = sprintf("(%s)", rtrim($columnsString, ", "));
-        $valuesQuery  = sprintf("VALUES (%s)", rtrim($valuesString, ", "));
-        $updateQuery  = sprintf("ON DUPLICATE KEY UPDATE %s", rtrim($updateString, ", "));
-        
-        $command = sprintf("INSERT INTO `%s` %s %s %s", $this->table, $columnsQuery, $valuesQuery, $updateQuery);
-        
-        return $command;
-    }
-    
-    /**
-     * Returns an associate array of the entity properties using reflection.
-     *
-     * @param EntityInterface[] $entities
-     *
-     * @return array
-     */
-    protected function getFields(array $entities): array
-    {
-        $dataArray = [];
-        
-        foreach ($entities as $entity) {
-            $entityProperties = [];
-            try {
-                $reflection = new \ReflectionClass($entity);
-            } catch (\ReflectionException $e) {
-                echo $e->getMessage() . PHP_EOL;
-                continue;
-            }
-            $properties = $reflection->getProperties();
-            
-            foreach ($properties as $property) {
-                $property->setAccessible(true);
-                $name = $this->toSnakeCase($property->getName());
-                
-                /* We should not update those manually, the db schema itself should take care of it. */
-                if ($name === "created_at" || $name === "updated_at") {
-                    continue;
-                }
-                
-                $value = $property->getValue($entity);
-                
-                $entityProperties[$name] = $value;
-            }
-            
-            $dataArray[] = $entityProperties;
-        }
-        
-        return $dataArray;
-    }
-    
-    /**
-     * Converts a string from camelCase to snake_case
-     *
-     * @param string $name
-     *
-     * @return string
-     */
-    protected function toSnakeCase(string $name): string
-    {
-        $name[0]  = strtolower($name[0]);
-        $function = function($char) {
-            return "_" . strtolower($char[1]);
-        };
-        
-        return preg_replace_callback(
-            '/([A-Z])/',
-            $function,
-            $name
-        );
-    }
-    
-    /**
-     * @param string $table
-     */
-    public function setTable(string $table): void
-    {
-        $this->table = $table;
-        $this->criteriaParser->setTable($table);
     }
 }

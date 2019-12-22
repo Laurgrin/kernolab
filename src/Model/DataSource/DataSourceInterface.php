@@ -13,7 +13,7 @@ interface DataSourceInterface
      *
      * @return mixed
      */
-    public function get(array $criteria = []);
+    public function get(array $criteria);
     
     /**
      * Saves entities to DataSource
