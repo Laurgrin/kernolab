@@ -9,7 +9,7 @@ class Transaction implements EntityInterface
     /**
      * @var int
      */
-    protected $transactionId;
+    protected $entityId;
     
     /**
      * @var int
@@ -68,7 +68,7 @@ class Transaction implements EntityInterface
      */
     public function getEntityId()
     {
-        return $this->transactionId;
+        return $this->entityId;
     }
     
     /**
@@ -128,18 +128,6 @@ class Transaction implements EntityInterface
     }
     
     /**
-     * @param string $updatedAt
-     *
-     * @return Transaction
-     */
-    public function setUpdatedAt($updatedAt)
-    {
-        $this->updatedAt = $updatedAt;
-        
-        return $this;
-    }
-    
-    /**
      * @return string
      */
     public function getTransactionProvider()
@@ -186,7 +174,7 @@ class Transaction implements EntityInterface
      */
     public function setTransactionId(int $transactionId): Transaction
     {
-        $this->transactionId = $transactionId;
+        $this->entityId = $transactionId;
         
         return $this;
     }
@@ -196,7 +184,7 @@ class Transaction implements EntityInterface
      */
     public function getTransactionId(): int
     {
-        return $this->transactionId;
+        return $this->entityId;
     }
     
     /**

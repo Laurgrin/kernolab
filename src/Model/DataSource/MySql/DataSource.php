@@ -5,6 +5,7 @@ namespace Kernolab\Model\DataSource\MySql;
 use Kernolab\Exception\MySqlConnectionException;
 use Kernolab\Exception\MySqlPreparedStatementException;
 use Kernolab\Model\DataSource\CriteriaParserInterface;
+use Kernolab\Model\DataSource\DataSourceInterface;
 use Kernolab\Model\Entity\EntityInterface;
 
 class DataSource implements DataSourceInterface
@@ -47,9 +48,8 @@ class DataSource implements DataSourceInterface
     {
         $credentials = json_decode(file_get_contents(ENV_PATH), true)["db"];
         $this->setConnection($credentials);
-        $this->setTable($table);
-        
         $this->criteriaParser = $criteriaParser;
+        $this->setTable($table);
     }
     
     /**
@@ -84,51 +84,53 @@ class DataSource implements DataSourceInterface
      *
      * @param $query
      *
-     * @return \Kernolab\Model\DataSource\MySql\DataSource
+     * @return \mysqli_stmt
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
     protected function prepare($query)
     {
-        $this->statement = $this->connection->prepare($query);
+        $statement = $this->connection->prepare($query);
         
-        if (!$this->statement) {
+        if (!$statement) {
             $this->throwException($this->connection, "An error occurred while preparing the statement: ");
         }
         
-        return $this;
+        return $statement;
     }
     
     /**
      * Binds params to a statement. Amount of types must match params.
      *
-     * @param string   $types
-     * @param string[] $params
+     * @param \mysqli_stmt $statement
+     * @param string[]     $params
      *
-     * @return \Kernolab\Model\DataSource\MySql\DataSource
+     * @return \mysqli_stmt
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    protected function bindParams(string $types, $params)
+    protected function bindParams(\mysqli_stmt $statement, array $params)
     {
-        if (!$this->statement->bind_param($types, ...$params)) {
-            $this->throwException($this->statement, "An error occurred while binding params to the statement:");
+        if (!$statement->bind_param(str_repeat("s", count($params)), ...$params)) {
+            $this->throwException($statement, "An error occurred while binding params to the statement:");
         }
         
-        return $this;
+        return $statement;
     }
     
     /**
      * Executes a prepared statement.
      *
-     * @return \Kernolab\Model\DataSource\MySql\DataSource
+     * @param \mysqli_stmt $statement
+     *
+     * @return \mysqli_stmt
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    public function executeCommand()
+    protected function executeStatement(\mysqli_stmt $statement)
     {
-        if (!$this->statement->execute()) {
-            $this->throwException($this->statement, "An error occurred while executing the statement: ");
+        if (!$statement->execute()) {
+            $this->throwException($statement, "An error occurred while executing the statement: ");
         }
         
-        return $this;
+        return $statement;
     }
     
     /**
@@ -152,37 +154,31 @@ class DataSource implements DataSourceInterface
     }
     
     /**
-     * Fetches the results of the query after all the prerequisite actions have been done. Will return either rows
-     * affected or the result set. Basically, it will return the results of the executed statement, regardless of
-     * what statement it is.
+     * Gets results from an executed statement.
      *
-     * @param string $command
-     * @param string $types
-     * @param array  $args
+     * @param \mysqli_stmt $statement
+     * @param bool         $closeOnReturn Should statement be closed when results are returned. Defaults to true.
      *
-     * @return int|array
+     * @return mixed
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    protected function execute(string $command, string $types = "", array $args = [])
+    protected function getResult(\mysqli_stmt $statement, bool $closeOnReturn = true)
     {
-        $this->prepare($command);
-        
-        /* Skip binding params if there are no params. */
-        if (count($args)) {
-            $this->bindParams($types, $args);
-        }
-        $this->executeCommand();
-        
         /* If metadata is false AND there are no errors, it means it wasn't a select statement,
         and we can return affected rows instead. If there is an error, something went terribly wrong.
         If we have metadata, it means it was a SELECT statement (or SHOW, EXPLAIN, etc.), then we return that. */
-        if (!$this->statement->result_metadata() && empty($this->statement->error_list)) {
-            return $this->statement->affected_rows;
-        } elseif (!$this->statement->result_metadata() && empty($this->statement->error_list)) {
-            $this->throwException($this->statement, "Error while trying to check metadata: ");
+        if (!$statement->result_metadata() && empty($this->statement->error_list)) {
+            return $statement->affected_rows;
+        } elseif (!$statement->result_metadata() && empty($this->statement->error_list)) {
+            $this->throwException($statement, "Error while trying to check metadata: ");
         }
         
-        return $this->statement->get_result()->fetch_all(MYSQLI_ASSOC);
+        $result = $statement->get_result()->fetch_all(MYSQLI_ASSOC);
+        if ($closeOnReturn) {
+            $statement->close();
+        }
+        
+        return $result;
     }
     
     /**
@@ -198,10 +194,9 @@ class DataSource implements DataSourceInterface
         $parsedCriteria = $this->criteriaParser->parseCriteria($criteria);
         $command        = $parsedCriteria["query"];
         
-        /* For sanity's sake, every bound parameter will be considered a string */
-        $types = str_repeat("s", count($parsedCriteria["args"]));
-        
-        $result = $this->execute($command, $types, $parsedCriteria["args"]);
+        $result = $this->getResult(
+            $this->executeStatement($this->bindParams($this->prepare($command), $parsedCriteria["args"]))
+        );
         
         return $result;
     }
@@ -215,13 +210,64 @@ class DataSource implements DataSourceInterface
      */
     public function set(array $entities): bool
     {
-        $command = "INSERT INTO `$this->table` ";
+        $dataArray    = $this->getFields($entities);
+        $affectedRows = 0;
         
-        $dataArray = $this->getFields($entities);
-        $keys      = array_keys($dataArray);
-        $values    = array_values($dataArray);
+        /* Get the columns for query generation. All of them will be the same, so we grab it from the first element. */
+        $columns      = array_keys($dataArray[0]);
+        $skipEntityId = $dataArray[0]["entity_id"] == 0;
+        $query        = $this->generateInsertQuery($columns, $skipEntityId);
+        try {
+            $statement = $this->prepare($query);
+    
+            foreach ($dataArray as $column => $value) {
+                if ($skipEntityId) {
+                    unset($value["entity_id"]);
+                }
         
+                $statement    = $this->bindParams($statement, array_values($value));
+                $affectedRows += $this->getResult($this->executeStatement($statement));
+            }
+        } catch (MySqlPreparedStatementException $e) {
+            echo $e->getMessage() . PHP_EOL;
+            return false;
+        }
         
+        return true;
+    }
+    
+    /**
+     * Generates an insert query from an array of entities.
+     *
+     * @param array $columns
+     * @param bool  $skipEntityId
+     *
+     * @return string
+     */
+    protected function generateInsertQuery(array $columns, bool $skipEntityId = false): string
+    {
+        /* If entity id is 0, we skip the first iteration as to not write the entity id into the query. */
+        $iterator = 0;
+        if ($skipEntityId) {
+            $iterator = 1;
+        }
+        
+        $columnsString = "";
+        $valuesString  = "";
+        $updateString  = "";
+        for ($i = $iterator; $i < count($columns); $i++) {
+            $columnsString .= "`{$columns[$i]}`, ";
+            $valuesString  .= "?, ";
+            $updateString  .= "`{$columns[$i]}` = VALUES(`{$columns[$i]}`), ";
+        }
+        
+        $columnsQuery = sprintf("(%s)", rtrim($columnsString, ", "));
+        $valuesQuery  = sprintf("VALUES (%s)", rtrim($valuesString, ", "));
+        $updateQuery  = sprintf("ON DUPLICATE KEY UPDATE %s", rtrim($updateString, ", "));
+        
+        $command = sprintf("INSERT INTO `%s` %s %s %s", $this->table, $columnsQuery, $valuesQuery, $updateQuery);
+        
+        return $command;
     }
     
     /**
@@ -247,10 +293,16 @@ class DataSource implements DataSourceInterface
             
             foreach ($properties as $property) {
                 $property->setAccessible(true);
-                $name  = $this->toSnakeCase($property->getName());
+                $name = $this->toSnakeCase($property->getName());
+                
+                /* We should not update those manually, the db schema itself should take care of it. */
+                if ($name === "created_at" || $name === "updated_at") {
+                    continue;
+                }
+                
                 $value = $property->getValue($entity);
                 
-                $entityProperties[$name] = $property->getValue($value);
+                $entityProperties[$name] = $value;
             }
             
             $dataArray[] = $entityProperties;

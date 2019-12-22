@@ -1,6 +1,6 @@
 <?php
 
-namespace Kernolab\Model\DataSource\MySql;
+namespace Kernolab\Model\DataSource;
 
 use Kernolab\Model\Entity\EntityInterface;
 
