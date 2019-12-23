@@ -1,5 +1,6 @@
 {
-  "/" : {
-
+  "/api/transaction/create" : {
+    "method": "POST",
+    "controller": "Transaction\\Create"
   }
 }

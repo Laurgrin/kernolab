@@ -7,7 +7,7 @@ use Kernolab\Exception\MySqlPreparedStatementException;
 use Kernolab\Model\DataSource\QueryGeneratorInterface;
 use Kernolab\Model\DataSource\DataSourceInterface;
 use Kernolab\Model\Entity\EntityInterface;
-use src\Model\Entity\EntityParserInterface;
+use Kernolab\Model\Entity\EntityParserInterface;
 
 class DataSource implements DataSourceInterface
 {
@@ -22,16 +22,16 @@ class DataSource implements DataSourceInterface
     protected $queryGenerator;
     
     /**
-     * @var \src\Model\Entity\EntityParserInterface
+     * @var \Kernolab\Model\Entity\EntityParserInterface
      */
     protected $entityParser;
     
     /**
      * DataSource constructor.
      *
-     * @param QueryGeneratorInterface                 $criteriaParser
+     * @param QueryGeneratorInterface                      $criteriaParser
      *
-     * @param \src\Model\Entity\EntityParserInterface $entityParser
+     * @param \Kernolab\Model\Entity\EntityParserInterface $entityParser
      *
      * @throws \Kernolab\Exception\MySqlConnectionException
      */

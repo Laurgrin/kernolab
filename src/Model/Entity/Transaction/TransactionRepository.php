@@ -1,41 +1,48 @@
 <?php
 
-namespace Kernolab\Model\DataSource\MySql;
+namespace Kernolab\Model\Entity\Transaction;
 
-use Kernolab\Model\DataSource\MySql\Query\DataSourceInterface;
-use Kernolab\Model\EntityInterface;
+use Kernolab\Model\DataSource\DataSourceInterface;
+use Kernolab\Model\DataSource\MySql\TransactionRepositoryInterface;
 
-class TransactionRepository implements RepositoryInterface
+class TransactionRepository implements TransactionRepositoryInterface
 {
     /**
-     * @var \Kernolab\Model\DataSource\MySql\Query\DataSourceInterface
+     * @var \Kernolab\Model\DataSource\DataSourceInterface
      */
-    protected $query;
+    protected $dataSource;
     
-    public function __construct(DataSourceInterface $query)
+    /**
+     * TransactionRepository constructor.
+     *
+     * @param \Kernolab\Model\DataSource\DataSourceInterface $dataSource
+     */
+    public function __construct(DataSourceInterface $dataSource)
     {
-        $this->query = $query;
+        $this->dataSource = $dataSource;
     }
     
     /**
-     * Saves the entity to the database.
+     * Save a new transaction to persistent storage.
      *
-     * @param \Kernolab\Model\EntityInterface $entity
+     * @param \Kernolab\Model\Entity\Transaction\Transaction $transaction
      *
      * @return mixed
      */
-    public function save(EntityInterface $entity)
+    public function createTransaction(Transaction $transaction)
     {
-        // TODO: Implement save() method.
+        // TODO: Implement createTransaction() method.
     }
     
     /**
-     * Gets all rows from the database.
+     * Update an array of transactions on the persistent storage.
      *
-     * @return void
+     * @param Transaction[] $transactions
+     *
+     * @return mixed
      */
-    public function get()
+    public function updateTransactions(array $transactions)
     {
-        // TODO: Implement get() method.
+        // TODO: Implement updateTransactions() method.
     }
 }
