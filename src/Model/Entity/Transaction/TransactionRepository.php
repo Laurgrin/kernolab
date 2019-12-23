@@ -3,7 +3,6 @@
 namespace Kernolab\Model\Entity\Transaction;
 
 use Kernolab\Model\DataSource\DataSourceInterface;
-use Kernolab\Model\DataSource\MySql\TransactionRepositoryInterface;
 
 class TransactionRepository implements TransactionRepositoryInterface
 {

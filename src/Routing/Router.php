@@ -44,7 +44,8 @@ class Router extends AbstractRouter
                         $controllerFqn = self::CONTROLLER_NAMESPACE . $route["controller"];
                         /** @var \Kernolab\Controller\ControllerInterface $controller */
                         $controller = new $controllerFqn($this->jsonResponse);
-                        $controller->execute($_REQUEST);
+                        
+                        $controller->execute($this->sanitize($_REQUEST));
                     } else {
                         echo $this->jsonResponse->addError(
                             "405",
@@ -56,5 +57,24 @@ class Router extends AbstractRouter
         } else {
             echo $this->jsonResponse->addError("404", "Endpoint $requestUri not found")->getResponse();
         }
+    }
+    
+    /**
+     * Filters the given array of data (POST or GET) and returns the sanitized array.
+     *
+     * @param array $data
+     *
+     * @return array
+     */
+    protected function sanitize(array $data): array
+    {
+        $filteredData = [];
+        
+        foreach ($data as $key => $value) {
+            $sanitizedValue = filter_var(trim($value), FILTER_SANITIZE_STRING);
+            $filteredData[$key] = $sanitizedValue;
+        }
+        
+        return $filteredData;
     }
 }

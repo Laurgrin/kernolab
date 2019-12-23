@@ -34,11 +34,12 @@ class JsonResponse implements JsonResponseInterface
      */
     public function addError(int $code, string $message): JsonResponseInterface
     {
-        $this->response["errors"] = [
-            "code" => $code,
-            "message" => $message
+        
+        $this->response["status"]   = "error";
+        $this->response["errors"][] = [
+            "code"    => $code,
+            "message" => $message,
         ];
-        $this->response["status"] = "error";
         
         return $this;
     }
@@ -50,6 +51,9 @@ class JsonResponse implements JsonResponseInterface
      */
     public function getResponse(): string
     {
-        return json_encode($this->response);
+        $response       = json_encode($this->response, JSON_UNESCAPED_LINE_TERMINATORS );
+        $this->response = [];
+        
+        return $response;
     }
 }

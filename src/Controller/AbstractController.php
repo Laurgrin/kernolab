@@ -12,5 +12,7 @@ abstract class AbstractController implements ControllerInterface
     public function __construct(JsonResponseInterface $jsonResponse)
     {
         $this->jsonResponse = $jsonResponse;
+        header("Content-Type: application/json");
+        header("Encoding: utf-8");
     }
 }

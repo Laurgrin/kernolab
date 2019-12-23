@@ -1,8 +1,6 @@
 <?php
 
-namespace Kernolab\Model\DataSource\MySql;
-
-use Kernolab\Model\Entity\Transaction\Transaction;
+namespace Kernolab\Model\Entity\Transaction;
 
 interface TransactionRepositoryInterface
 {

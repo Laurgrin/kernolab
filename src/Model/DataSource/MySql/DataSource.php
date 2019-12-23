@@ -29,16 +29,16 @@ class DataSource implements DataSourceInterface
     /**
      * DataSource constructor.
      *
-     * @param QueryGeneratorInterface                      $criteriaParser
+     * @param QueryGeneratorInterface                      $queryGenerator
      *
      * @param \Kernolab\Model\Entity\EntityParserInterface $entityParser
      *
      * @throws \Kernolab\Exception\MySqlConnectionException
      */
-    public function __construct(QueryGeneratorInterface $criteriaParser, EntityParserInterface $entityParser)
+    public function __construct(QueryGeneratorInterface $queryGenerator, EntityParserInterface $entityParser)
     {
         $credentials          = json_decode(file_get_contents(ENV_PATH), true)["db"];
-        $this->queryGenerator = $criteriaParser;
+        $this->queryGenerator = $queryGenerator;
         $this->entityParser   = $entityParser;
         $this->setConnection($credentials);
     }
