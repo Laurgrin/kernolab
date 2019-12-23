@@ -2,10 +2,13 @@
 
 namespace Kernolab\Model\Entity\Transaction;
 
+use Kernolab\Model\DataSource\Criteria;
 use Kernolab\Model\DataSource\DataSourceInterface;
 
 class TransactionRepository implements TransactionRepositoryInterface
 {
+    const DATETIME_FORMAT = "Y-m-d H:i:s";
+    
     /**
      * @var \Kernolab\Model\DataSource\DataSourceInterface
      */
@@ -24,13 +27,22 @@ class TransactionRepository implements TransactionRepositoryInterface
     /**
      * Save a new transaction to persistent storage.
      *
-     * @param \Kernolab\Model\Entity\Transaction\Transaction $transaction
+     * @param array $params
      *
      * @return mixed
      */
-    public function createTransaction(Transaction $transaction)
+    public function createTransaction(array $params)
     {
-        // TODO: Implement createTransaction() method.
+        $transaction = new Transaction();
+        $transaction->setUserId($params["user_id"])
+                    ->setTransactionStatus("awaiting_confirmation")
+                    ->setTransactionRecipientName($params["transaction_recipient_name"])
+                    ->setTransactionRecipientId($params["transaction_recipient_id"])
+                    ->setTransactionCurrency($params["transaction_currency"])
+                    ->setTransactionAmount($params["transaction_amount"])
+                    ->setTransactionDetails($params["transaction_details"]);
+        
+        return $this->dataSource->set([$transaction])[0];
     }
     
     /**
@@ -43,5 +55,38 @@ class TransactionRepository implements TransactionRepositoryInterface
     public function updateTransactions(array $transactions)
     {
         // TODO: Implement updateTransactions() method.
+    }
+    
+    /**
+     * Get the transaction count of the user in the past hour.
+     *
+     * @param int $userId
+     *
+     * @return int
+     * @throws \Exception
+     */
+    public function getTransactionCount(int $userId): int
+    {
+        $count    = 0;
+        $criteria = new Criteria("user_id", "eq", $userId);
+        $dataset  = $this->dataSource->get([$criteria], "transaction");
+        $now      = new \DateTime();
+        
+        foreach ($dataset as $entityData) {
+            $transactionTime = \DateTime::createFromFormat(self::DATETIME_FORMAT, $entityData["created_at"]);
+            $timeDifference  = $now->diff($transactionTime);
+            
+            /* We have to check all time units above hours as well, since the next year at the same hour would make the
+            hour difference 0 */
+            if ($timeDifference->y > 0 ||
+                $timeDifference->m > 0 ||
+                $timeDifference->d > 0 ||
+                $timeDifference->h >= 1
+            ) {
+                $count++;
+            }
+        }
+        
+        return $count;
     }
 }

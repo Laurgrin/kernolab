@@ -100,7 +100,7 @@ class DataSource implements DataSourceInterface
      */
     protected function bindParams(\mysqli_stmt $statement, array $params)
     {
-        if (!$statement->bind_param(str_repeat("s", count($params)), ...$params)) {
+        if (!$statement->bind_param(str_repeat("s", count($params)), ...array_values($params))) {
             $this->throwException($statement, "An error occurred while binding params to the statement:");
         }
         
@@ -179,54 +179,54 @@ class DataSource implements DataSourceInterface
      *
      * @param string                                $table
      *
-     * @return mixed
+     * @return array
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    public function get(array $criteria = [], string $table = "")
+    public function get(array $criteria = [], string $table = ""): array
     {
-        $parsedCriteria = $this->queryGenerator->parseRetrieval($criteria);
+        $parsedCriteria = $this->queryGenerator->parseRetrieval($table, $criteria);
         $command        = $parsedCriteria["query"];
         
-        $result = $this->getResult(
+        $results = $this->getResult(
             $this->executeStatement($this->bindParams($this->prepare($command), $parsedCriteria["args"]))
         );
         
-        return $result;
+        return $results;
     }
     
     /**
-     * Saves entities to DataSource
+     * Saves entities to DataSource. If new entities were created, they will be returned with their ID set.
      *
      * @param EntityInterface[] $entities
      *
-     * @return bool
+     * @return array|\Kernolab\Model\Entity\EntityInterface[]
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    public function set(array $entities): bool
+    public function set(array $entities)
     {
-        $dataArray    = $this->entityParser->getEntityProperties($entities);
-        $affectedRows = 0;
+        $savedEntities = [];
         
-        /* Get the columns for query generation. All of them will be the same, so we grab it from the first element. */
-        $columns      = array_keys($dataArray[0]);
-        $skipEntityId = $dataArray[0]["entity_id"] == 0;
-        $query        = $this->queryGenerator->parseInsertion($this->entityParser->getEntityTarget($entities[0]), $columns);
-        try {
-            $statement = $this->prepare($query);
+        /* We only want to prepare the statement once, and then bind and execute it with different values. */
+        $entityProperties  = $this->entityParser->getEntityProperties($entities[0]);
+        $columns       = array_keys($entityProperties);
+        $query        =
+            $this->queryGenerator->parseInsertion($this->entityParser->getEntityTarget($entities[0]), $columns);
+        $statement    = $this->prepare($query);
+        
+        foreach ($entities as $entity) {
+            $entityProperties = $this->entityParser->getEntityProperties($entity);
             
-            foreach ($dataArray as $column => $value) {
-                if ($skipEntityId) {
-                    unset($value["entity_id"]);
-                }
-                
-                $statement    = $this->bindParams($statement, array_values($value));
-                $affectedRows += $this->getResult($this->executeStatement($statement));
+            /* If entity ID is 0, we're saving a new entity, so we don't need to write it to the DB*/
+            if ($entity->getEntityId() == 0) {
+                unset($entityProperties["entity_id"]);
             }
-        } catch (MySqlPreparedStatementException $e) {
-            echo $e->getMessage() . PHP_EOL;
             
-            return false;
+            $statement = $this->bindParams($statement, array_values($entityProperties));
+            $this->executeStatement($statement);
+            $entity->setEntityId($this->connection->insert_id);
+            $savedEntities[] = $entity;
         }
         
-        return true;
+        return $entities;
     }
 }

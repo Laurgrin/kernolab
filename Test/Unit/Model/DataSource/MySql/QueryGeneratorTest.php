@@ -7,7 +7,7 @@ use Kernolab\Model\DataSource\Criteria;
 use Kernolab\Model\DataSource\MySql\QueryGenerator;
 use PHPUnit\Framework\TestCase;
 
-class CriteriaParserTest extends TestCase
+class QueryGeneratorTest extends TestCase
 {
     private $criteria;
     

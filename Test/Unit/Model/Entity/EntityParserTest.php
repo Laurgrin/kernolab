@@ -26,6 +26,12 @@ class EntityParserTest extends TestCase
             "test",
             "EUR"
         );
+        $this->transaction->setUserId(1)
+                          ->setTransactionStatus("test")
+                          ->setTransactionRecipientName("test")
+                          ->setTransactionRecipientId(2)
+                          ->setTransactionCurrency("EUR")
+                          ->setTransactionAmount(200);
     }
     
     protected function tearDown(): void
@@ -52,20 +58,15 @@ class EntityParserTest extends TestCase
     public function testGetEntityProperties()
     {
         $expected = [
-            [
-                "entity_id"                  => 0,
-                "user_id"                    => 1,
-                "transaction_status"         => "test",
-                "transaction_fee"            => 20,
-                "transaction_provider"       => "test",
-                "transaction_amount"         => 200,
-                "transaction_recipient_id"   => 2,
-                "transaction_recipient_name" => "test",
-                "transaction_currency"       => "EUR",
-            ],
+            "user_id"                    => 1,
+            "transaction_status"         => "test",
+            "transaction_amount"         => 200,
+            "transaction_recipient_id"   => 2,
+            "transaction_recipient_name" => "test",
+            "transaction_currency"       => "EUR",
         ];
         
-        $this->assertEquals($expected, $this->entityParser->getEntityProperties([$this->transaction]));
+        $this->assertEquals($expected, $this->entityParser->getEntityProperties($this->transaction));
     }
     
     public function toSnakeCaseProvider()

@@ -24,4 +24,13 @@ interface EntityInterface
      * @return mixed
      */
     public function getUpdatedAt();
+    
+    /**
+     * Sets the entity ID.
+     *
+     * @param int $id
+     *
+     * @return \Kernolab\Model\Entity\EntityInterface
+     */
+    public function setEntityId(int $id): EntityInterface;
 }

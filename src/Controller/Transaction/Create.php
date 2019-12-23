@@ -5,9 +5,11 @@ namespace Kernolab\Controller\Transaction;
 use Kernolab\Controller\AbstractController;
 use Kernolab\Controller\JsonResponseInterface;
 use Kernolab\Exception\MySqlConnectionException;
+use Kernolab\Model\DataSource\Criteria;
 use Kernolab\Model\DataSource\MySql\DataSource;
 use Kernolab\Model\DataSource\MySql\QueryGenerator;
 use Kernolab\Model\Entity\EntityParser;
+use Kernolab\Model\Entity\Transaction\Transaction;
 use Kernolab\Model\Entity\Transaction\TransactionRepository;
 
 class Create extends AbstractController
@@ -40,6 +42,15 @@ class Create extends AbstractController
             echo $this->jsonResponse->getResponse();
             return;
         }
+        
+        echo "Total count: " . $this->transactionRepository->getTransactionCount("1");
+        
+        
+        /*$entity = $this->transactionRepository->createTransaction($params);
+        echo $this->jsonResponse->addField("status", "success")
+        ->addField("message", "Transaction successfully created.")
+        ->addField("entity_id", $entity->getEntityId())
+        ->getResponse();*/
     }
     
     /**

@@ -11,16 +11,16 @@ interface DataSourceInterface
      *
      * @param \Kernolab\Model\DataSource\Criteria[] $criteria
      *
-     * @return mixed
+     * @return array
      */
-    public function get(array $criteria);
+    public function get(array $criteria): array;
     
     /**
      * Saves entities to DataSource
      *
      * @param EntityInterface[] $entities
      *
-     * @return bool
+     * @return mixed
      */
-    public function set(array $entities): bool;
+    public function set(array $entities);
 }

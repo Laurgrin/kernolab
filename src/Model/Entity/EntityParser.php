@@ -7,42 +7,36 @@ class EntityParser implements EntityParserInterface
     /**
      * Returns an associate array of the entity properties using reflection.
      *
-     * @param EntityInterface[] $entities
+     * @param \Kernolab\Model\Entity\EntityInterface $entity
      *
      * @return array
+     * @throws \ReflectionException
      */
-    public function getEntityProperties(array $entities): array
+    public function getEntityProperties(EntityInterface $entity): array
     {
-        $dataArray = [];
+        $entityProperties = [];
+        $reflection       = new \ReflectionClass($entity);
+        $properties       = $reflection->getProperties();
         
-        foreach ($entities as $entity) {
-            $entityProperties = [];
-            try {
-                $reflection = new \ReflectionClass($entity);
-            } catch (\ReflectionException $e) {
-                echo $e->getMessage() . PHP_EOL;
+        foreach ($properties as $property) {
+            $property->setAccessible(true);
+            $name = $this->toSnakeCase($property->getName());
+            
+            /* We should not update those manually, the db schema itself should take care of it. */
+            if ($name === "created_at" || $name === "updated_at") {
                 continue;
             }
-            $properties = $reflection->getProperties();
             
-            foreach ($properties as $property) {
-                $property->setAccessible(true);
-                $name = $this->toSnakeCase($property->getName());
-                
-                /* We should not update those manually, the db schema itself should take care of it. */
-                if ($name === "created_at" || $name === "updated_at") {
-                    continue;
-                }
-                
-                $value = $property->getValue($entity);
-                
-                $entityProperties[$name] = $value;
+            /* Skip this property if it is not set. */
+            $value = $property->getValue($entity);
+            if (empty($value)) {
+                continue;
             }
             
-            $dataArray[] = $entityProperties;
+            $entityProperties[$name] = $value;
         }
         
-        return $dataArray;
+        return $entityProperties;
     }
     
     /**

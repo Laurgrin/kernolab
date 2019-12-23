@@ -9,7 +9,7 @@ class Transaction implements EntityInterface
     /**
      * @var int
      */
-    protected $entityId;
+    protected $entityId = 0;
     
     /**
      * @var int
@@ -65,44 +65,6 @@ class Transaction implements EntityInterface
      * @var string
      */
     protected $transactionDetails;
-    
-    /**
-     * Transaction constructor.
-     *
-     * @param int    $entityId
-     * @param string $userId
-     * @param string $transactionStatus
-     * @param float  $transactionFee
-     * @param string $transactionProvider
-     * @param float  $transactionAmount
-     * @param int    $transactionRecipientId
-     * @param string $transactionRecipientName
-     * @param string $transactionCurrency
-     * @param string $transactionDetails
-     */
-    public function __construct(
-        int $entityId,
-        string $userId,
-        string $transactionStatus,
-        float $transactionFee,
-        string $transactionProvider,
-        float $transactionAmount,
-        int $transactionRecipientId,
-        string $transactionRecipientName,
-        string $transactionCurrency,
-        string $transactionDetails
-    ) {
-        $this->entityId                 = $entityId;
-        $this->userId                   = $userId;
-        $this->transactionStatus        = $transactionStatus;
-        $this->transactionFee           = $transactionFee;
-        $this->transactionProvider      = $transactionProvider;
-        $this->transactionAmount        = $transactionAmount;
-        $this->transactionRecipientId   = $transactionRecipientId;
-        $this->transactionRecipientName = $transactionRecipientName;
-        $this->transactionCurrency      = $transactionCurrency;
-        $this->transactionDetails       = $transactionDetails;
-    }
     
     /**
      * Returns the entity's ID (primary key).
@@ -332,5 +294,17 @@ class Transaction implements EntityInterface
     public function getTransactionDetails(): string
     {
         return $this->transactionDetails;
+    }
+    
+    /**
+     * @param int $entityId
+     *
+     * @return Transaction
+     */
+    public function setEntityId(int $entityId): EntityInterface
+    {
+        $this->entityId = $entityId;
+        
+        return $this;
     }
 }
