@@ -15,7 +15,7 @@
       {
         "field": "transaction_details",
         "rule": "random_int",
-        "value": 5
+        "value": 50000
       }
     ]
   }
