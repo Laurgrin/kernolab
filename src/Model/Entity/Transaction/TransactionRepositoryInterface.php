@@ -14,20 +14,11 @@ interface TransactionRepositoryInterface
     public function createTransaction(array $params);
     
     /**
-     * Update an array of transactions on the persistent storage.
-     *
-     * @param Transaction[] $transactions
-     *
-     * @return mixed
-     */
-    public function updateTransactions(array $transactions);
-    
-    /**
-     * Get the transaction count of the user in the past hour.
+     * Get all transactions made by a specific user ID.
      *
      * @param int $userId
      *
-     * @return int
+     * @return mixed
      */
-    public function getTransactionCount(int $userId);
+    public function getTransactionsByUserId(int $userId);
 }

@@ -7,21 +7,28 @@ use Kernolab\Model\DataSource\DataSourceInterface;
 
 class TransactionRepository implements TransactionRepositoryInterface
 {
-    const DATETIME_FORMAT = "Y-m-d H:i:s";
-    
     /**
      * @var \Kernolab\Model\DataSource\DataSourceInterface
      */
     protected $dataSource;
     
     /**
+     * @var \Kernolab\Model\Entity\Transaction\TransactionProviderRuleInterface
+     */
+    protected $transactionProviderRule;
+    
+    /**
      * TransactionRepository constructor.
      *
-     * @param \Kernolab\Model\DataSource\DataSourceInterface $dataSource
+     * @param \Kernolab\Model\DataSource\DataSourceInterface                      $dataSource
+     * @param \Kernolab\Model\Entity\Transaction\TransactionProviderRuleInterface $transactionProviderRule
      */
-    public function __construct(DataSourceInterface $dataSource)
-    {
-        $this->dataSource = $dataSource;
+    public function __construct(
+        DataSourceInterface $dataSource,
+        TransactionProviderRuleInterface $transactionProviderRule
+    ) {
+        $this->dataSource              = $dataSource;
+        $this->transactionProviderRule = $transactionProviderRule;
     }
     
     /**
@@ -33,6 +40,8 @@ class TransactionRepository implements TransactionRepositoryInterface
      */
     public function createTransaction(array $params)
     {
+        $params = $this->transactionProviderRule->applyProviderRules($params);
+        
         $transaction = new Transaction();
         $transaction->setUserId($params["user_id"])
                     ->setTransactionStatus("awaiting_confirmation")
@@ -40,53 +49,24 @@ class TransactionRepository implements TransactionRepositoryInterface
                     ->setTransactionRecipientId($params["transaction_recipient_id"])
                     ->setTransactionCurrency($params["transaction_currency"])
                     ->setTransactionAmount($params["transaction_amount"])
-                    ->setTransactionDetails($params["transaction_details"]);
+                    ->setTransactionDetails($params["transaction_details"])
+                    ->setTransactionFee($params["transaction_fee"])
+                    ->setTransactionProvider($params["transaction_provider"]);
         
         return $this->dataSource->set([$transaction])[0];
     }
     
     /**
-     * Update an array of transactions on the persistent storage.
-     *
-     * @param Transaction[] $transactions
-     *
-     * @return mixed
-     */
-    public function updateTransactions(array $transactions)
-    {
-        // TODO: Implement updateTransactions() method.
-    }
-    
-    /**
-     * Get the transaction count of the user in the past hour.
+     * Get all transactions made by a specific user ID.
      *
      * @param int $userId
      *
-     * @return int
-     * @throws \Exception
+     * @return mixed
      */
-    public function getTransactionCount(int $userId): int
+    public function getTransactionsByUserId(int $userId)
     {
-        $count    = 0;
         $criteria = new Criteria("user_id", "eq", $userId);
-        $dataset  = $this->dataSource->get([$criteria], "transaction");
-        $now      = new \DateTime();
         
-        foreach ($dataset as $entityData) {
-            $transactionTime = \DateTime::createFromFormat(self::DATETIME_FORMAT, $entityData["created_at"]);
-            $timeDifference  = $now->diff($transactionTime);
-            
-            /* We have to check all time units above hours as well, since the next year at the same hour would make the
-            hour difference 0 */
-            if ($timeDifference->y > 0 ||
-                $timeDifference->m > 0 ||
-                $timeDifference->d > 0 ||
-                $timeDifference->h >= 1
-            ) {
-                $count++;
-            }
-        }
-        
-        return $count;
+        return $this->dataSource->get([$criteria], "transaction");
     }
 }

@@ -1,0 +1,22 @@
+{
+  "EUR": {
+    "name": "Megacash",
+    "rules": [
+      {
+        "field": "transaction_details",
+        "rule": "length",
+        "value": 20
+      }
+    ]
+  },
+  "Default": {
+    "name": "Supermoney",
+    "rules": [
+      {
+        "field": "transaction_details",
+        "rule": "random_int",
+        "value": 5
+      }
+    ]
+  }
+}
