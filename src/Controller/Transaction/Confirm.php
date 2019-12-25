@@ -2,39 +2,8 @@
 
 namespace Kernolab\Controller\Transaction;
 
-use Kernolab\Controller\AbstractController;
-use Kernolab\Controller\JsonResponseInterface;
-use Kernolab\Exception\MySqlConnectionException;
-use Kernolab\Model\DataSource\MySql\DataSource;
-use Kernolab\Model\DataSource\MySql\QueryGenerator;
-use Kernolab\Model\Entity\EntityParser;
-use Kernolab\Model\Entity\Transaction\TransactionRepository;
-
-class Confirm extends AbstractController
+class Confirm extends AbstractTransactionController
 {
-    /**
-     * @var \Kernolab\Model\Entity\Transaction\TransactionRepository
-     */
-    protected $transactionRepository;
-    
-    /**
-     * Confirm constructor.
-     *
-     * @param JsonResponseInterface $jsonResponse
-     */
-    public function __construct(JsonResponseInterface $jsonResponse)
-    {
-        parent::__construct($jsonResponse);
-        $queryGenerator = new QueryGenerator();
-        $entityParser   = new EntityParser();
-        try {
-            $dataSource                  = new DataSource($queryGenerator, $entityParser);
-            $this->transactionRepository = new TransactionRepository($dataSource);
-        } catch (MySqlConnectionException $e) {
-            echo $this->jsonResponse->addError("500", "There were problems getting a response.")->getResponse();
-        }
-    }
-    
     /**
      * Process a request and return a response
      *

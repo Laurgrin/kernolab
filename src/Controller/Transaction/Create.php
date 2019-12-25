@@ -2,34 +2,9 @@
 
 namespace Kernolab\Controller\Transaction;
 
-use Kernolab\Controller\AbstractController;
-use Kernolab\Controller\JsonResponseInterface;
-use Kernolab\Exception\MySqlConnectionException;
-use Kernolab\Model\DataSource\MySql\DataSource;
-use Kernolab\Model\DataSource\MySql\QueryGenerator;
-use Kernolab\Model\Entity\EntityParser;
-use Kernolab\Model\Entity\Transaction\TransactionProviderRule;
-use Kernolab\Model\Entity\Transaction\TransactionRepository;
-
-class Create extends AbstractController
+class Create extends AbstractTransactionController
 {
     const DATETIME_FORMAT = "Y-m-d H:i:s";
-    
-    protected $transactionRepository;
-    
-    public function __construct(JsonResponseInterface $jsonResponse)
-    {
-        parent::__construct($jsonResponse);
-        $queryGenerator = new QueryGenerator();
-        $entityParser   = new EntityParser();
-        try {
-            $dataSource                  = new DataSource($queryGenerator, $entityParser);
-            $transactionProviderRule     = new TransactionProviderRule();
-            $this->transactionRepository = new TransactionRepository($dataSource, $transactionProviderRule);
-        } catch (MySqlConnectionException $e) {
-            echo $this->jsonResponse->addError("500", "There were problems getting a response.")->getResponse();
-        }
-    }
     
     /**
      * Process a request and return a response

@@ -10,31 +10,8 @@ use Kernolab\Model\DataSource\MySql\QueryGenerator;
 use Kernolab\Model\Entity\EntityParser;
 use Kernolab\Model\Entity\Transaction\TransactionRepository;
 
-class Get extends AbstractController
+class Get extends AbstractTransactionController
 {
-    /**
-     * @var \Kernolab\Model\Entity\Transaction\TransactionRepository
-     */
-    protected $transactionRepository;
-    
-    /**
-     * Get constructor.
-     *
-     * @param JsonResponseInterface $jsonResponse
-     */
-    public function __construct(JsonResponseInterface $jsonResponse)
-    {
-        parent::__construct($jsonResponse);
-        $queryGenerator = new QueryGenerator();
-        $entityParser   = new EntityParser();
-        try {
-            $dataSource                  = new DataSource($queryGenerator, $entityParser);
-            $this->transactionRepository = new TransactionRepository($dataSource);
-        } catch (MySqlConnectionException $e) {
-            echo $this->jsonResponse->addError("500", "There were problems getting a response.")->getResponse();
-        }
-    }
-    
     /**
      * Process a request and return a response
      *

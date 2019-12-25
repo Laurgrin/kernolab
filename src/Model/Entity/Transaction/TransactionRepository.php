@@ -114,4 +114,35 @@ class TransactionRepository implements TransactionRepositoryInterface
         
         return $transaction;
     }
+    
+    /**
+     * Processes unprocessed transactions.
+     *
+     * @param int $limit
+     *
+     * @return \Kernolab\Model\Entity\Transaction\Transaction[]
+     */
+    public function processTransactions(int $limit = 0): array
+    {
+        $criteria[] = new Criteria("transaction_status", "eq", "confirmed");
+        $entityData = $this->dataSource->get($criteria, "transaction");
+        $count      = 0;
+        $transactionsToProcess = [];
+        
+        foreach ($entityData as $entity) {
+            if ($limit != 0 && $count >= $limit) {
+                break;
+            }
+            $count++;
+            
+            $transaction = new Transaction();
+            $transaction->setEntityId($entity["entity_id"])
+                        ->setTransactionStatus("processed");
+            $transactionsToProcess[] = $transaction;
+        }
+        
+        $updatedTransactions = $this->dataSource->set($transactionsToProcess);
+        
+        return $updatedTransactions;
+    }
 }
