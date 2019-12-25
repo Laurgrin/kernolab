@@ -7,10 +7,6 @@
     "method": "POST",
     "controller": "Transaction\\Confirm"
   },
-  "/api/transaction/process": {
-    "method": "POST",
-    "controller": "Transaction\\Process"
-  },
   "/api/transaction/get": {
     "method": "GET",
     "controller": "Transaction\\Get"

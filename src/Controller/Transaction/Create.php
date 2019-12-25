@@ -40,7 +40,16 @@ class Create extends AbstractController
      */
     public function execute(array $params)
     {
-        if (!$this->validateParams($params)) {
+        $requiredKeys = [
+            "user_id",
+            "transaction_details",
+            "transaction_recipient_id",
+            "transaction_recipient_name",
+            "transaction_amount",
+            "transaction_currency",
+        ];
+        
+        if (!$this->validateParams($params, $requiredKeys)) {
             echo $this->jsonResponse->getResponse();
             
             return;
@@ -70,37 +79,6 @@ class Create extends AbstractController
         } catch (\Exception $e) {
             echo $this->jsonResponse->addError("500", $e->getMessage())->getResponse();
         }
-    }
-    
-    /**
-     * Validates if all the required request params are there. Does not care about their values though.
-     *
-     * @param array $params
-     *
-     * @return bool
-     */
-    protected function validateParams(array $params): bool
-    {
-        $requestKeys  = array_keys($params);
-        $requiredKeys = [
-            "user_id",
-            "transaction_details",
-            "transaction_recipient_id",
-            "transaction_recipient_name",
-            "transaction_amount",
-            "transaction_currency",
-        ];
-        
-        if (array_intersect($requestKeys, $requiredKeys) === $requiredKeys) {
-            return true;
-        }
-        
-        $missingParams = array_diff($requiredKeys, $requestKeys);
-        foreach ($missingParams as $missingParam) {
-            $this->jsonResponse->addError(400, "Missing required argument {$missingParam}.");
-        }
-        
-        return false;
     }
     
     /**

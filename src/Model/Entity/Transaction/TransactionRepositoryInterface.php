@@ -21,4 +21,14 @@ interface TransactionRepositoryInterface
      * @return mixed
      */
     public function getTransactionsByUserId(int $userId);
+    
+    /**
+     * Confirms a transaction.
+     *
+     * @param int    $entityId
+     * @param string $verificationCode
+     *
+     * @return mixed
+     */
+    public function confirmTransaction(int $entityId);
 }

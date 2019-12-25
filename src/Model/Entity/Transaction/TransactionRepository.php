@@ -25,7 +25,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      */
     public function __construct(
         DataSourceInterface $dataSource,
-        TransactionProviderRuleInterface $transactionProviderRule
+        TransactionProviderRuleInterface $transactionProviderRule = null
     ) {
         $this->dataSource              = $dataSource;
         $this->transactionProviderRule = $transactionProviderRule;
@@ -68,5 +68,21 @@ class TransactionRepository implements TransactionRepositoryInterface
         $criteria = new Criteria("user_id", "eq", $userId);
         
         return $this->dataSource->get([$criteria], "transaction");
+    }
+    
+    /**
+     * Confirms a transaction.
+     *
+     * @param int $entityId
+     *
+     * @return mixed
+     */
+    public function confirmTransaction(int $entityId)
+    {
+        $transaction = new Transaction();
+        $transaction->setEntityId($entityId);
+        $transaction->setTransactionStatus("confirmed");
+        
+        return $this->dataSource->set([$transaction])[0];
     }
 }
