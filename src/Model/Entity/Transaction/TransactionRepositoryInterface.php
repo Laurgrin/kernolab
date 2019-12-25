@@ -31,4 +31,13 @@ interface TransactionRepositoryInterface
      * @return mixed
      */
     public function confirmTransaction(int $entityId);
+    
+    /**
+     * Gets a specific transaction by transaction ID.
+     *
+     * @param int $entityId
+     *
+     * @return \Kernolab\Model\Entity\Transaction\Transaction
+     */
+    public function getTransactionByEntityId(int $entityId): Transaction;
 }

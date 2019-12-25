@@ -307,4 +307,28 @@ class Transaction implements EntityInterface
         
         return $this;
     }
+    
+    /**
+     * @param string $createdAt
+     *
+     * @return Transaction
+     */
+    public function setCreatedAt(string $createdAt): Transaction
+    {
+        $this->createdAt = $createdAt;
+        
+        return $this;
+    }
+    
+    /**
+     * @param string $updatedAt
+     *
+     * @return Transaction
+     */
+    public function setUpdatedAt(string $updatedAt): Transaction
+    {
+        $this->updatedAt = $updatedAt;
+        
+        return $this;
+    }
 }
