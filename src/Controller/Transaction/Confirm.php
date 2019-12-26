@@ -43,6 +43,7 @@ class Confirm extends AbstractTransactionController
      * @param $verificationCode
      *
      * @return bool
+     * @codeCoverageIgnore
      */
     protected function validateTransactionConfirmation($userId, $verificationCode): bool
     {

@@ -11,6 +11,7 @@ class Process extends AbstractTransactionController
      * @param array $params
      *
      * @return mixed
+     * @codeCoverageIgnore
      */
     public function execute(array $params)
     {

@@ -2,7 +2,15 @@
 
 namespace Kernolab\Routing;
 
+use Kernolab\Controller\ControllerInterface;
+use Kernolab\Controller\JsonResponse;
 use Kernolab\Controller\JsonResponseInterface;
+use Kernolab\Exception\MySqlConnectionException;
+use Kernolab\Model\DataSource\MySql\DataSource;
+use Kernolab\Model\DataSource\MySql\QueryGenerator;
+use Kernolab\Model\Entity\EntityParser;
+use Kernolab\Model\Entity\Transaction\TransactionProviderRule;
+use Kernolab\Model\Entity\Transaction\TransactionRepository;
 
 class Router extends AbstractRouter
 {
@@ -41,11 +49,15 @@ class Router extends AbstractRouter
             foreach ($this->routes as $uri => $route) {
                 if ($requestUri === $uri) {
                     if ($route["method"] === $requestMethod) {
-                        $controllerFqn = self::CONTROLLER_NAMESPACE . $route["controller"];
-                        /** @var \Kernolab\Controller\ControllerInterface $controller */
-                        $controller = new $controllerFqn($this->jsonResponse);
+                        try {
+                            $controller = $this->instantiateControllerClass($route["controller"]);
+                        } catch (MySqlConnectionException $e) {
+                            echo $this->jsonResponse->addError("500", "There has been an internal error.")
+                                                    ->getResponse();
+                            return;
+                        }
                         
-                        $controller->execute($this->sanitize($_REQUEST));
+                        $controller->execute($this->sanitize($this->getRequestParams($requestMethod)));
                     } else {
                         echo $this->jsonResponse->addError(
                             "405",
@@ -71,10 +83,55 @@ class Router extends AbstractRouter
         $filteredData = [];
         
         foreach ($data as $key => $value) {
-            $sanitizedValue = filter_var(trim($value), FILTER_SANITIZE_STRING);
+            $sanitizedValue     = filter_var(trim($value), FILTER_SANITIZE_STRING);
             $filteredData[$key] = $sanitizedValue;
         }
         
         return $filteredData;
+    }
+    
+    /**
+     * Gets request params based on the request method.
+     *
+     * @param string $method
+     *
+     * @return array
+     */
+    protected function getRequestParams(string $method): array
+    {
+        switch ($method) {
+            case "GET":
+                return $_GET;
+            case "POST":
+                return $_POST;
+            default:
+                return $_REQUEST;
+        }
+    }
+    
+    /**
+     * Instantiates a controller based on controller name
+     *
+     * @param string $controllerName
+     *
+     * @return \Kernolab\Controller\ControllerInterface
+     * @throws \Kernolab\Exception\MySqlConnectionException
+     */
+    protected function instantiateControllerClass(string $controllerName): ControllerInterface
+    {
+        $controllerEntity = explode("\\", $controllerName)[0];
+        $controllerFqn    = self::CONTROLLER_NAMESPACE . $controllerName;
+        $jsonResponse     = new JsonResponse();
+        
+        switch ($controllerEntity) {
+            case "Transaction":
+                $dataSource              = new DataSource(new QueryGenerator(), new EntityParser());
+                $transactionProviderRule = new TransactionProviderRule();
+                $repository              = new TransactionRepository($dataSource, $transactionProviderRule);
+                
+                return new $controllerFqn($jsonResponse, $repository);
+            default:
+                return new $controllerFqn($jsonResponse);
+        }
     }
 }

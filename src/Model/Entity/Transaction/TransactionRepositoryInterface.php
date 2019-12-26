@@ -39,7 +39,7 @@ interface TransactionRepositoryInterface
      *
      * @return \Kernolab\Model\Entity\Transaction\Transaction
      */
-    public function getTransactionByEntityId(int $entityId): Transaction;
+    public function getTransactionByEntityId(int $entityId): ?Transaction;
     
     /**
      * Processes unprocessed transactions up to the $limit. No limit if 0.

@@ -2,6 +2,7 @@
 
 namespace Kernolab\Controller;
 
+/** @codeCoverageIgnore  */
 abstract class AbstractController implements ControllerInterface
 {
     /**

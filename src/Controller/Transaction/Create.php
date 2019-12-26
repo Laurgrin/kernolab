@@ -63,6 +63,7 @@ class Create extends AbstractTransactionController
      *
      * @return int
      * @throws \Exception
+     * @codeCoverageIgnore
      */
     protected function getTransactionCount(int $userId): int
     {
@@ -92,6 +93,7 @@ class Create extends AbstractTransactionController
      *
      * @return float
      * @throws \Exception
+     * @codeCoverageIgnore
      */
     protected function getTransactionFee(int $userId, float $transactionAmount): float
     {
@@ -133,6 +135,7 @@ class Create extends AbstractTransactionController
      * @param int $userId
      *
      * @return bool
+     * @codeCoverageIgnore
      */
     protected function canTransfer(int $userId): bool
     {

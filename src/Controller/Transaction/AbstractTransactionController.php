@@ -4,13 +4,9 @@ namespace Kernolab\Controller\Transaction;
 
 use Kernolab\Controller\AbstractController;
 use Kernolab\Controller\JsonResponseInterface;
-use Kernolab\Exception\MySqlConnectionException;
-use Kernolab\Model\DataSource\MySql\DataSource;
-use Kernolab\Model\DataSource\MySql\QueryGenerator;
-use Kernolab\Model\Entity\EntityParser;
-use Kernolab\Model\Entity\Transaction\TransactionProviderRule;
-use Kernolab\Model\Entity\Transaction\TransactionRepository;
+use Kernolab\Model\Entity\Transaction\TransactionRepositoryInterface;
 
+/** @codeCoverageIgnore */
 abstract class AbstractTransactionController extends AbstractController
 {
     /**
@@ -18,17 +14,17 @@ abstract class AbstractTransactionController extends AbstractController
      */
     protected $transactionRepository;
     
-    public function __construct(JsonResponseInterface $jsonResponse)
-    {
+    /**
+     * AbstractTransactionController constructor.
+     *
+     * @param \Kernolab\Controller\JsonResponseInterface                        $jsonResponse
+     * @param \Kernolab\Model\Entity\Transaction\TransactionRepositoryInterface $transactionRepository
+     */
+    public function __construct(
+        JsonResponseInterface $jsonResponse,
+        TransactionRepositoryInterface $transactionRepository
+    ) {
         parent::__construct($jsonResponse);
-        $queryGenerator = new QueryGenerator();
-        $entityParser   = new EntityParser();
-        try {
-            $dataSource                  = new DataSource($queryGenerator, $entityParser);
-            $transactionProviderRule     = new TransactionProviderRule();
-            $this->transactionRepository = new TransactionRepository($dataSource, $transactionProviderRule);
-        } catch (MySqlConnectionException $e) {
-            echo $this->jsonResponse->addError("500", "There were problems getting a response.")->getResponse();
-        }
+        $this->transactionRepository = $transactionRepository;
     }
 }

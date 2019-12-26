@@ -93,24 +93,27 @@ class TransactionRepository implements TransactionRepositoryInterface
      *
      * @return \Kernolab\Model\Entity\Transaction\Transaction
      */
-    public function getTransactionByEntityId(int $entityId): Transaction
+    public function getTransactionByEntityId(int $entityId): ?Transaction
     {
+        $transaction = null;
         $criteria   = new Criteria("entity_id", "eq", $entityId);
         $entityData = $this->dataSource->get([$criteria], "transaction")[0];
         
-        $transaction = new Transaction();
-        $transaction->setEntityId($entityId)
-                    ->setUserId($entityData["user_id"])
-                    ->setTransactionStatus($entityData["transaction_status"])
-                    ->setTransactionFee($entityData["transaction_fee"])
-                    ->setCreatedAt($entityData["created_at"])
-                    ->setUpdatedAt($entityData["updated_at"])
-                    ->setTransactionProvider($entityData["transaction_provider"])
-                    ->setTransactionAmount($entityData["transaction_amount"])
-                    ->setTransactionRecipientId($entityData["transaction_recipient_id"])
-                    ->setTransactionRecipientName($entityData["transaction_recipient_name"])
-                    ->setTransactionCurrency($entityData["transaction_currency"])
-                    ->setTransactionDetails($entityData["transaction_details"]);
+        if (!empty($entityData)) {
+            $transaction = new Transaction();
+            $transaction->setEntityId($entityId)
+                        ->setUserId($entityData["user_id"])
+                        ->setTransactionStatus($entityData["transaction_status"])
+                        ->setTransactionFee($entityData["transaction_fee"])
+                        ->setCreatedAt($entityData["created_at"])
+                        ->setUpdatedAt($entityData["updated_at"])
+                        ->setTransactionProvider($entityData["transaction_provider"])
+                        ->setTransactionAmount($entityData["transaction_amount"])
+                        ->setTransactionRecipientId($entityData["transaction_recipient_id"])
+                        ->setTransactionRecipientName($entityData["transaction_recipient_name"])
+                        ->setTransactionCurrency($entityData["transaction_currency"])
+                        ->setTransactionDetails($entityData["transaction_details"]);
+        }
         
         return $transaction;
     }
