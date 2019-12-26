@@ -17,10 +17,14 @@ class ConfirmTest extends TestCase
         $transaction->method("getEntityId")
                     ->willReturn(1);
         
+        $map = [
+          [1, $transaction],
+          [100, null]
+        ];
+        
         $repository = $this->createMock(TransactionRepository::class);
         $repository->method("confirmTransaction")
-                   ->with(1)
-                   ->willReturn($transaction);
+                   ->will($this->returnValueMap($map));
         
         $this->controller = new Confirm(new JsonResponse(), $repository);
     }
@@ -46,25 +50,32 @@ class ConfirmTest extends TestCase
     public function executeProvider()
     {
         return [
-            [
+            "success" => [
                 [
                     "entity_id"         => "1",
                     "verification_code" => "111",
                 ],
                 '{"status":"success","code":"200","message":"Transaction 1 confirmed successfully."}',
             ],
-            [
+            "validation fails" => [
                 [
                     "entity_id"         => "1",
                     "verification_code" => "112",
                 ],
                 '{"status":"error","errors":[{"code":401,"message":"Invalid verification code"}]}',
             ],
-            [
+            "missing params" => [
                 [
                     "entity_id" => "1",
                 ],
                 '{"status":"error","errors":[{"code":400,"message":"Missing required argument verification_code."}]}',
+            ],
+            "entity does not exist" => [
+                [
+                    "entity_id" => "100",
+                    "verification_code" => "111",
+                ],
+                '{"status":"error","errors":[{"code":404,"message":"Transaction ID 100 is already confirmed or does not exist"}]}',
             ],
         ];
     }

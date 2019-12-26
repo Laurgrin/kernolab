@@ -21,11 +21,11 @@ interface DataSourceInterface
     public function get(array $criteria): array;
     
     /**
-     * Saves entities to DataSource
+     * Saves entities to DataSource and returns it. If a new one is created, returns the entity with it's ID.
      *
-     * @param EntityInterface[] $entities
+     * @param EntityInterface $entity
      *
-     * @return mixed
+     * @return EntityInterface
      */
-    public function set(array $entities);
+    public function set(EntityInterface $entity): EntityInterface;
 }

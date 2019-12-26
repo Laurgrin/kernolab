@@ -195,38 +195,33 @@ class DataSource implements DataSourceInterface
     }
     
     /**
-     * Saves entities to DataSource. If new entities were created, they will be returned with their ID set.
+     * Saves an entity to DataSource. If a new entity was created, it will be returned with its ID set.
      *
-     * @param EntityInterface[] $entities
+     * @param \Kernolab\Model\Entity\EntityInterface $entity
      *
-     * @return array|\Kernolab\Model\Entity\EntityInterface[]
+     * @return \Kernolab\Model\Entity\EntityInterface
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    public function set(array $entities)
+    public function set(EntityInterface $entity): EntityInterface
     {
         $savedEntities = [];
         
         /* We only want to prepare the statement once, and then bind and execute it with different values. */
-        $entityProperties  = $this->entityParser->getEntityProperties($entities[0]);
+        $entityProperties  = $this->entityParser->getEntityProperties($entity);
         $columns       = array_keys($entityProperties);
         $query        =
-            $this->queryGenerator->parseInsertion($this->entityParser->getEntityTarget($entities[0]), $columns);
+            $this->queryGenerator->parseInsertion($this->entityParser->getEntityTarget($entity), $columns);
         $statement    = $this->prepare($query);
-        
-        foreach ($entities as $entity) {
-            $entityProperties = $this->entityParser->getEntityProperties($entity);
-            
-            /* If entity ID is 0, we're saving a new entity, so we don't need to write it to the DB*/
-            if ($entity->getEntityId() == 0) {
-                unset($entityProperties["entity_id"]);
-            }
-            
-            $statement = $this->bindParams($statement, array_values($entityProperties));
-            $this->executeStatement($statement);
-            $entity->setEntityId($this->connection->insert_id);
-            $savedEntities[] = $entity;
+        if ($entity->getEntityId() == 0) {
+            unset($entityProperties["entity_id"]);
         }
+    
+        $statement = $this->bindParams($statement, array_values($entityProperties));
+        $this->executeStatement($statement);
+        $entity->setEntityId($this->connection->insert_id);
+        $savedEntities[] = $entity;
+       
         
-        return $entities;
+        return $entity;
     }
 }

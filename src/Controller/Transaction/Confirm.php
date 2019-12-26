@@ -20,15 +20,22 @@ class Confirm extends AbstractTransactionController
             return;
         }
         
-        $userId           = $params["entity_id"];
+        $entityId           = $params["entity_id"];
         $verificationCode = $params["verification_code"];
         
-        if ($this->validateTransactionConfirmation($userId, $verificationCode)) {
-            $transaction = $this->transactionRepository->confirmTransaction($userId);
-            echo $this->jsonResponse->addField("status", "success")
-                                    ->addField("code", "200")
-                                    ->addField("message", "Transaction {$transaction->getEntityId()} confirmed successfully.")
-                                    ->getResponse();
+        if ($this->validateTransactionConfirmation($entityId, $verificationCode)) {
+            $transaction = $this->transactionRepository->confirmTransaction($entityId);
+            if ($transaction) {
+                echo $this->jsonResponse->addField("status", "success")
+                                        ->addField("code", "200")
+                                        ->addField("message", "Transaction {$transaction->getEntityId()} confirmed successfully.")
+                                        ->getResponse();
+            } else {
+                echo $this->jsonResponse->addError(
+                    404,
+                    "Transaction ID {$entityId} is already confirmed or does not exist"
+                )->getResponse();
+            }
         } else {
             echo $this->jsonResponse->addError(401, "Invalid verification code")->getResponse();
             

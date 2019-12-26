@@ -36,6 +36,7 @@ class Create extends AbstractTransactionController
             if ($this->getTransactionCount($userId) < 10) {
                 if ($this->canTransfer($userId)) {
                     $params["transaction_fee"] = $this->getTransactionFee($userId, $params["transaction_amount"]);
+                    $params["transaction_status"] = "created";
                     
                     $entity = $this->transactionRepository->createTransaction($params);
                     echo $this->jsonResponse->addField("status", "success")
@@ -68,11 +69,11 @@ class Create extends AbstractTransactionController
     protected function getTransactionCount(int $userId): int
     {
         $count   = 0;
-        $dataset = $this->transactionRepository->getTransactionsByUserId($userId);
+        $transactions = $this->transactionRepository->getTransactionsByUserId($userId);
         $now     = new \DateTime();
         
-        foreach ($dataset as $entityData) {
-            $transactionTime = \DateTime::createFromFormat(self::DATETIME_FORMAT, $entityData["created_at"]);
+        foreach ($transactions as $transaction) {
+            $transactionTime = \DateTime::createFromFormat(self::DATETIME_FORMAT, $transaction->getCreatedAt());
             $timeDifference  = $now->diff($transactionTime);
             
             /* We have to check all time units above hours as well, since the next year at the same hour would make the
@@ -97,12 +98,13 @@ class Create extends AbstractTransactionController
      */
     protected function getTransactionFee(int $userId, float $transactionAmount): float
     {
-        $dataset = $this->transactionRepository->getTransactionsByUserId($userId);
+        $transactions = $this->transactionRepository->getTransactionsByUserId($userId);
         $now     = new \DateTime();
         
         /* Filters out the transactions not made today */
-        $dailyTransactions = array_filter($dataset, function($entityData) use ($now) {
-            $transactionTime = \DateTime::createFromFormat(self::DATETIME_FORMAT, $entityData["created_at"]);
+        $dailyTransactions = array_filter($transactions, function($transaction) use ($now) {
+            /** @var \Kernolab\Model\Entity\Transaction\Transaction $transaction*/
+            $transactionTime = \DateTime::createFromFormat(self::DATETIME_FORMAT, $transaction->getCreatedAt());
             $timeDifference  = $now->diff($transactionTime);
             
             if ($timeDifference->y > 0 || $timeDifference->m > 0 || $timeDifference->d >= 1) {
@@ -112,15 +114,15 @@ class Create extends AbstractTransactionController
             return true;
         }
         );
-        
+    
         /* Sum amounts by currency */
         $amountsByCurrency = [];
         foreach ($dailyTransactions as $dailyTransaction) {
-            if (!array_key_exists($dailyTransaction["transaction_currency"], $amountsByCurrency)) {
-                $amountsByCurrency[$dailyTransaction["transaction_currency"]] = 0;
+            if (!array_key_exists($dailyTransaction->getTransactionCurrency(), $amountsByCurrency)) {
+                $amountsByCurrency[$dailyTransaction->getTransactionCurrency()] = 0;
             }
-            $amountsByCurrency[$dailyTransaction["transaction_currency"]] += $dailyTransaction["transaction_amount"];
-            if ($amountsByCurrency[$dailyTransaction["transaction_currency"]] >= 100) {
+            $amountsByCurrency[$dailyTransaction->getTransactionCurrency()] += $dailyTransaction->getTransactionAmount();
+            if ($amountsByCurrency[$dailyTransaction->getTransactionCurrency()] >= 100) {
                 return $transactionAmount * 0.05;
             }
         }
@@ -139,15 +141,15 @@ class Create extends AbstractTransactionController
      */
     protected function canTransfer(int $userId): bool
     {
-        $dataset           = $this->transactionRepository->getTransactionsByUserId($userId);
+        $transactions           = $this->transactionRepository->getTransactionsByUserId($userId);
         $amountsByCurrency = [];
         
-        foreach ($dataset as $data) {
-            if (!array_key_exists($data["transaction_currency"], $amountsByCurrency)) {
-                $amountsByCurrency[$data["transaction_currency"]] = 0;
+        foreach ($transactions as $transaction) {
+            if (!array_key_exists($transaction->getTransactionCurrency(), $amountsByCurrency)) {
+                $amountsByCurrency[$transaction->getTransactionCurrency()] = 0;
             }
-            $amountsByCurrency[$data["transaction_currency"]] += ($data["transaction_amount"] + $data["transaction_fee"]);
-            if ($amountsByCurrency[$data["transaction_currency"]] >= 1000) {
+            $amountsByCurrency[$transaction->getTransactionCurrency()] += ($transaction->getTransactionAmount() + $transaction->getTransactionFee());
+            if ($amountsByCurrency[$transaction->getTransactionCurrency()] >= 1000) {
                 return false;
             }
         }

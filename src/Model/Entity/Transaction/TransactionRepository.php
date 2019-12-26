@@ -36,24 +36,16 @@ class TransactionRepository implements TransactionRepositoryInterface
      *
      * @param array $params
      *
-     * @return mixed
+     * @return \Kernolab\Model\Entity\Transaction\Transaction
      */
-    public function createTransaction(array $params)
+    public function createTransaction(array $params): Transaction
     {
         $params = $this->transactionProviderRule->applyProviderRules($params);
         
-        $transaction = new Transaction();
-        $transaction->setUserId($params["user_id"])
-                    ->setTransactionStatus("awaiting_confirmation")
-                    ->setTransactionRecipientName($params["transaction_recipient_name"])
-                    ->setTransactionRecipientId($params["transaction_recipient_id"])
-                    ->setTransactionCurrency($params["transaction_currency"])
-                    ->setTransactionAmount($params["transaction_amount"])
-                    ->setTransactionDetails($params["transaction_details"])
-                    ->setTransactionFee($params["transaction_fee"])
-                    ->setTransactionProvider($params["transaction_provider"]);
+        $transaction = $this->createTransactionObject($params);
+        $result      = $this->dataSource->set($transaction);
         
-        return $this->dataSource->set([$transaction])[0];
+        return $result;
     }
     
     /**
@@ -61,13 +53,18 @@ class TransactionRepository implements TransactionRepositoryInterface
      *
      * @param int $userId
      *
-     * @return mixed
+     * @return \Kernolab\Model\Entity\Transaction\Transaction[]
      */
-    public function getTransactionsByUserId(int $userId)
+    public function getTransactionsByUserId(int $userId): array
     {
         $criteria = new Criteria("user_id", "eq", $userId);
         
-        return $this->dataSource->get([$criteria], "transaction");
+        $transactions = [];
+        foreach ($this->dataSource->get([$criteria], "transaction") as $data) {
+            $transactions[] = $this->createTransactionObject($data);
+        }
+        
+        return $transactions;
     }
     
     /**
@@ -75,15 +72,19 @@ class TransactionRepository implements TransactionRepositoryInterface
      *
      * @param int $entityId
      *
-     * @return mixed
+     * @return \Kernolab\Model\Entity\Transaction\Transaction
      */
-    public function confirmTransaction(int $entityId)
+    public function confirmTransaction(int $entityId): ?Transaction
     {
-        $transaction = new Transaction();
-        $transaction->setEntityId($entityId);
-        $transaction->setTransactionStatus("confirmed");
+        $transaction = $this->getTransactionByEntityId($entityId);
+        if ($transaction && $transaction->getTransactionStatus() == "created") {
+            $transaction->setTransactionStatus("confirmed");
+    
+    
+            return $this->dataSource->set($transaction);
+        }
         
-        return $this->dataSource->set([$transaction])[0];
+        return null;
     }
     
     /**
@@ -96,26 +97,10 @@ class TransactionRepository implements TransactionRepositoryInterface
     public function getTransactionByEntityId(int $entityId): ?Transaction
     {
         $transaction = null;
-        $criteria   = new Criteria("entity_id", "eq", $entityId);
-        $entityData = $this->dataSource->get([$criteria], "transaction")[0];
+        $criteria    = new Criteria("entity_id", "eq", $entityId);
+        $entityData  = $this->dataSource->get([$criteria], "transaction");
         
-        if (!empty($entityData)) {
-            $transaction = new Transaction();
-            $transaction->setEntityId($entityId)
-                        ->setUserId($entityData["user_id"])
-                        ->setTransactionStatus($entityData["transaction_status"])
-                        ->setTransactionFee($entityData["transaction_fee"])
-                        ->setCreatedAt($entityData["created_at"])
-                        ->setUpdatedAt($entityData["updated_at"])
-                        ->setTransactionProvider($entityData["transaction_provider"])
-                        ->setTransactionAmount($entityData["transaction_amount"])
-                        ->setTransactionRecipientId($entityData["transaction_recipient_id"])
-                        ->setTransactionRecipientName($entityData["transaction_recipient_name"])
-                        ->setTransactionCurrency($entityData["transaction_currency"])
-                        ->setTransactionDetails($entityData["transaction_details"]);
-        }
-        
-        return $transaction;
+        return $this->createTransactionObject($entityData);
     }
     
     /**
@@ -127,10 +112,10 @@ class TransactionRepository implements TransactionRepositoryInterface
      */
     public function processTransactions(int $limit = 0): array
     {
-        $criteria[] = new Criteria("transaction_status", "eq", "confirmed");
-        $entityData = $this->dataSource->get($criteria, "transaction");
-        $count      = 0;
-        $transactionsToProcess = [];
+        $criteria[]            = new Criteria("transaction_status", "eq", "confirmed");
+        $entityData            = $this->dataSource->get($criteria, "transaction");
+        $count                 = 0;
+        $updatedTransactions = [];
         
         foreach ($entityData as $entity) {
             if ($limit != 0 && $count >= $limit) {
@@ -141,11 +126,39 @@ class TransactionRepository implements TransactionRepositoryInterface
             $transaction = new Transaction();
             $transaction->setEntityId($entity["entity_id"])
                         ->setTransactionStatus("processed");
-            $transactionsToProcess[] = $transaction;
+            $updatedTransactions[] = $this->dataSource->set($transaction);
         }
         
-        $updatedTransactions = $this->dataSource->set($transactionsToProcess);
-        
         return $updatedTransactions;
+    }
+    
+    /**
+     * Creates a transaction object from database data
+     *
+     * @param array $data
+     *
+     * @return \Kernolab\Model\Entity\Transaction\Transaction
+     */
+    protected function createTransactionObject(array $data): ?Transaction
+    {
+        $transaction = null;
+        
+        if (!empty($data)) {
+            $transaction = new Transaction();
+            $transaction->setEntityId($data["entity_id"] ?? 0)
+                        ->setUserId($data["user_id"])
+                        ->setTransactionStatus($data["transaction_status"])
+                        ->setTransactionFee($data["transaction_fee"])
+                        ->setCreatedAt($data["created_at"] ?? "")
+                        ->setUpdatedAt($data["updated_at"] ?? "")
+                        ->setTransactionProvider($data["transaction_provider"])
+                        ->setTransactionAmount($data["transaction_amount"])
+                        ->setTransactionRecipientId($data["transaction_recipient_id"])
+                        ->setTransactionRecipientName($data["transaction_recipient_name"])
+                        ->setTransactionCurrency($data["transaction_currency"])
+                        ->setTransactionDetails($data["transaction_details"]);
+        }
+        
+        return $transaction;
     }
 }

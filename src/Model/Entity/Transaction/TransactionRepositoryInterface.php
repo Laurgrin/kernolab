@@ -9,28 +9,27 @@ interface TransactionRepositoryInterface
      *
      * @param array $params
      *
-     * @return mixed
+     * @return \Kernolab\Model\Entity\Transaction\Transaction
      */
-    public function createTransaction(array $params);
+    public function createTransaction(array $params): Transaction;
     
     /**
      * Get all transactions made by a specific user ID.
      *
      * @param int $userId
      *
-     * @return mixed
+     * @return \Kernolab\Model\Entity\Transaction\Transaction[]
      */
-    public function getTransactionsByUserId(int $userId);
+    public function getTransactionsByUserId(int $userId): array;
     
     /**
      * Confirms a transaction.
      *
-     * @param int    $entityId
-     * @param string $verificationCode
+     * @param int $entityId
      *
-     * @return mixed
+     * @return \Kernolab\Model\Entity\Transaction\Transaction
      */
-    public function confirmTransaction(int $entityId);
+    public function confirmTransaction(int $entityId): ?Transaction;
     
     /**
      * Gets a specific transaction by transaction ID.
