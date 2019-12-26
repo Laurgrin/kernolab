@@ -41,6 +41,7 @@ class TransactionProviderRuleTest extends TestCase
     
     /**
      * @dataProvider applyProviderRulesMegacashProvider
+     * @runInSeparateProcess
      *
      * @param $params
      * @param $expected
@@ -62,14 +63,15 @@ class TransactionProviderRuleTest extends TestCase
                 [
                     "transaction_details"  => "20 characters here: ",
                     "transaction_currency" => "EUR",
-                    "transaction_provider" => "Megacash"
-                ]
+                    "transaction_provider" => "Megacash",
+                ],
             ],
         ];
     }
     
     /**
      * @dataProvider applyProviderRulesSupermoneyProvider
+     * @runInSeparateProcess
      *
      * @param $params
      * @param $expected
@@ -92,8 +94,8 @@ class TransactionProviderRuleTest extends TestCase
                 [
                     "transaction_details"  => "Details ",
                     "transaction_currency" => "USD",
-                    "transaction_provider" => "Supermoney"
-                ]
+                    "transaction_provider" => "Supermoney",
+                ],
             ],
         ];
     }

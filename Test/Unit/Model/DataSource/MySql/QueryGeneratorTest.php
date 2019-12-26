@@ -23,6 +23,7 @@ class QueryGeneratorTest extends TestCase
     
     /**
      * @dataProvider parseCriteriaProvider
+     * @runInSeparateProcess
      *
      * @param $target
      * @param $input
@@ -37,6 +38,10 @@ class QueryGeneratorTest extends TestCase
         $this->assertEquals($expected, $result);
     }
     
+    /**
+     * @runInSeparateProcess
+     * @throws \Kernolab\Exception\UnknownOperandException
+     */
     public function testParseCriteriaException()
     {
         $input = [new Criteria("id", "ez", 3),];
@@ -82,6 +87,8 @@ class QueryGeneratorTest extends TestCase
     
     /**
      * @dataProvider parseInsertionProvider
+     * @runInSeparateProcess
+     *
      * @param $target
      * @param $columns
      * @param $skipEntityId

@@ -24,12 +24,18 @@ class JsonResponseTest extends TestCase
         $this->jsonResponse = null;
     }
     
+    /**
+     * @runInSeparateProcess
+     */
     public function testAddField()
     {
         $this->jsonResponse->addField("key", "value");
         $this->assertEquals('{"key":"value"}', $this->jsonResponse->getResponse());
     }
     
+    /**
+     * @runInSeparateProcess
+     */
     public function testAddFieldMultiple()
     {
         $this->jsonResponse->addField("key", "value");
@@ -37,12 +43,18 @@ class JsonResponseTest extends TestCase
         $this->assertEquals('{"key":"value","key2":"value2"}', $this->jsonResponse->getResponse());
     }
     
+    /**
+     * @runInSeparateProcess
+     */
     public function testAddFieldArray()
     {
         $this->jsonResponse->addField("key", ["value1", "value2", "value3"]);
         $this->assertEquals('{"key":["value1","value2","value3"]}', $this->jsonResponse->getResponse());
     }
     
+    /**
+     * @runInSeparateProcess
+     */
     public function testAddError()
     {
         $this->jsonResponse->addError(500, "Error");

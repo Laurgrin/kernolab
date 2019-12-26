@@ -41,6 +41,7 @@ class EntityParserTest extends TestCase
     
     /**
      * @dataProvider toSnakeCaseProvider
+     * @runInSeparateProcess
      *
      * @param $input
      * @param $expected
@@ -50,11 +51,21 @@ class EntityParserTest extends TestCase
         $this->assertEquals($expected, $this->entityParser->toSnakeCase($input));
     }
     
+    /**
+     * @runInSeparateProcess
+     *
+     * @throws \ReflectionException
+     */
     public function testGetEntityTarget()
     {
         $this->assertEquals("transaction", $this->entityParser->getEntityTarget($this->transaction));
     }
     
+    /**
+     * @runInSeparateProcess
+     *
+     * @throws \ReflectionException
+     */
     public function testGetEntityProperties()
     {
         $expected = [
