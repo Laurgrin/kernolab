@@ -4,6 +4,7 @@ namespace Kernolab\Model\Entity\Transaction;
 
 use Kernolab\Model\Entity\EntityInterface;
 
+/** @codeCoverageIgnore  */
 class Transaction implements EntityInterface
 {
     /**

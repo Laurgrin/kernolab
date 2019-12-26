@@ -4,6 +4,11 @@ namespace Kernolab\Exception;
 
 use Exception;
 
+/**
+ * Class MySqlConnectionException
+ * @package Kernolab\Exception
+ * @codeCoverageIgnore
+ */
 class MySqlConnectionException extends Exception
 {
     public function __construct($message, $code = 2, Exception $previous = null) {

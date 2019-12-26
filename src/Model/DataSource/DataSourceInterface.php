@@ -4,6 +4,11 @@ namespace Kernolab\Model\DataSource;
 
 use Kernolab\Model\Entity\EntityInterface;
 
+/**
+ * Interface DataSourceInterface
+ * @package Kernolab\Model\DataSource
+ * @codeCoverageIgnore
+ */
 interface DataSourceInterface
 {
     /**

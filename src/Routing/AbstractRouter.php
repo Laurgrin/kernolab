@@ -4,6 +4,11 @@ namespace Kernolab\Routing;
 
 use Kernolab\Controller\JsonResponseInterface;
 
+/**
+ * Class AbstractRouter
+ * @package Kernolab\Routing
+ * @codeCoverageIgnore
+ */
 abstract class AbstractRouter implements RouterInterface
 {
     /**

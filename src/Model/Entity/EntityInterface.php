@@ -2,6 +2,11 @@
 
 namespace Kernolab\Model\Entity;
 
+/**
+ * Interface EntityInterface
+ * @package Kernolab\Model\Entity
+ * @codeCoverageIgnore
+ */
 interface EntityInterface
 {
     /**

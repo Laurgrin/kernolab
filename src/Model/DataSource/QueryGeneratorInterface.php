@@ -2,6 +2,11 @@
 
 namespace Kernolab\Model\DataSource;
 
+/**
+ * Interface QueryGeneratorInterface
+ * @package Kernolab\Model\DataSource
+ * @codeCoverageIgnore
+ */
 interface QueryGeneratorInterface
 {
     /**

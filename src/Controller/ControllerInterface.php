@@ -2,6 +2,11 @@
 
 namespace Kernolab\Controller;
 
+/**
+ * Interface ControllerInterface
+ * @package Kernolab\Controller
+ * @codeCoverageIgnore
+ */
 interface ControllerInterface
 {
     /**

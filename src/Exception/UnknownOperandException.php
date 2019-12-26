@@ -4,6 +4,11 @@ namespace Kernolab\Exception;
 
 use Exception;
 
+/**
+ * Class UnknownOperandException
+ * @package Kernolab\Exception
+ * @codeCoverageIgnore
+ */
 class UnknownOperandException extends Exception
 {
     public function __construct($message, $code = 5, Exception $previous = null) {

@@ -1,15 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Laurynas
- * Date: 2019-12-17
- * Time: 15:55
- */
 
 namespace Kernolab\Exception;
 
 use Exception;
 
+/**
+ * Class ClassNotFoundException
+ * @package Kernolab\Exception
+ * @codeCoverageIgnore
+ */
 class ClassNotFoundException extends Exception
 {
     public function __construct($message, $code = 1, Exception $previous = null) {

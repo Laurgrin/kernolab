@@ -2,6 +2,11 @@
 
 namespace Kernolab\Routing;
 
+/**
+ * Interface RouterInterface
+ * @package Kernolab\Routing
+ * @codeCoverageIgnore
+ */
 interface RouterInterface
 {
     /**

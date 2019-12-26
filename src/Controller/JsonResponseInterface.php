@@ -2,6 +2,11 @@
 
 namespace Kernolab\Controller;
 
+/**
+ * Interface JsonResponseInterface
+ * @package Kernolab\Controller
+ * @codeCoverageIgnore
+ */
 interface JsonResponseInterface
 {
     /**

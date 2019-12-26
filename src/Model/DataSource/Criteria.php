@@ -2,6 +2,11 @@
 
 namespace Kernolab\Model\DataSource;
 
+/**
+ * Class Criteria
+ * @package Kernolab\Model\DataSource
+ * @codeCoverageIgnore
+ */
 final class Criteria
 {
     const OPERAND_EQUALS = "eq";

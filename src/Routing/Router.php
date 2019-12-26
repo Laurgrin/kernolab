@@ -12,6 +12,7 @@ use Kernolab\Model\Entity\EntityParser;
 use Kernolab\Model\Entity\Transaction\TransactionProviderRule;
 use Kernolab\Model\Entity\Transaction\TransactionRepository;
 
+/** @codeCoverageIgnore  */
 class Router extends AbstractRouter
 {
     const CONTROLLER_NAMESPACE = "\\Kernolab\\Controller\\";
