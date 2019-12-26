@@ -56,3 +56,11 @@ Request body:
 
 ## Transaction processing
 Transaction processing doesn't have an external endpoint. Instead, it should be set in a crontab, running the `./src/Cron/processTransactions.php`. Depending on the needs, the `limit` argument can be set to limit the number of transactions processed per run and combined with the scheduling in the crontab itself.
+
+## Extending
+This task was written with being able to extend most features. Of course, there could many improvements, but I am not trying to write a framework here. It's not exactly an ORM for transaction handling, but I tried to abstract things to the best of my abilities. 
+Things like QueryGenerator would need to be expanded if we we were to use more Criteria operands than just eq (=). Router might need to add extra handling if a new entity and it's controllers were added. 
+Adding a new route should not be hard, as long as the existing conventions are followed. Routing file can be found in `./routing.json`
+For transaction processor rules, only the ones in the task were added, and their parsing would need to be extended on the existing `TransactionProviderRule` class. Current rules can be found in `./src/Model/Entity/Transaction/providers.json`
+## Missing things & testing
+To be honest, I was learning unit testing as I did this task, as at my previous workplace unit (or any automated testing) was not part of our workflow. I could not figure out, in timely manner, how to test functions directly related to database operations. DBUnit seems to be no longer supported. Testing of endpoints was done manually using Postman. As for functional testing, I would need more time to learn how to use it, which would exceed the given time for this task.
