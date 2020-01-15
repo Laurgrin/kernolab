@@ -2,6 +2,8 @@
 
 namespace Kernolab\Controller\Transaction;
 
+use Kernolab\Controller\JsonResponse;
+
 class Confirm extends AbstractTransactionController
 {
     /**
@@ -9,15 +11,13 @@ class Confirm extends AbstractTransactionController
      *
      * @param array $params
      *
-     * @return mixed
+     * @return JsonResponse
      */
-    public function execute(array $params)
+    public function execute(array $params): JsonResponse
     {
         $requiredParams = ['entity_id', 'verification_code'];
         if (!$this->validateParams($params, $requiredParams)) {
-            echo $this->jsonResponse->getResponse();
-            
-            return;
+            return $this->jsonResponse;
         }
         
         $entityId         = $params['entity_id'];
@@ -26,23 +26,20 @@ class Confirm extends AbstractTransactionController
         if ($this->validateTransactionConfirmation($entityId, $verificationCode)) {
             $transaction = $this->transactionRepository->confirmTransaction($entityId);
             if ($transaction) {
-                echo $this->jsonResponse->addField('status', 'success')
+                return $this->jsonResponse->addField('status', 'success')
                                         ->addField('code', '200')
                                         ->addField('message', sprintf('Transaction %s confirmed successfully.',
                                                                       $transaction->getEntityId())
-                                        )
-                                        ->getResponse();
-            } else {
-                echo $this->jsonResponse->addError(
-                    404,
-                    sprintf('Transaction ID %s is already confirmed or does not exist', $entityId)
-                )->getResponse();
+                                        );
             }
-        } else {
-            echo $this->jsonResponse->addError(401, 'Invalid verification code')->getResponse();
-            
-            return;
+    
+            return $this->jsonResponse->addError(
+                404,
+                sprintf('Transaction ID %s is already confirmed or does not exist', $entityId)
+            );
         }
+    
+        return $this->jsonResponse->addError(401, 'Invalid verification code');
     }
     
     /**

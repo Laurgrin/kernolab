@@ -2,6 +2,8 @@
 
 namespace Kernolab\Controller\Transaction;
 
+use Kernolab\Controller\JsonResponse;
+
 class Get extends AbstractTransactionController
 {
     /**
@@ -9,20 +11,18 @@ class Get extends AbstractTransactionController
      *
      * @param array $params
      *
-     * @return mixed
+     * @return JsonResponse
      */
-    public function execute(array $params)
+    public function execute(array $params): JsonResponse
     {
         $requiredParams = ['entity_id'];
         if (!$this->validateParams($params, $requiredParams)) {
-            echo $this->jsonResponse->getResponse();
-            
-            return;
+            return $this->jsonResponse;
         }
         
         $entity = $this->transactionRepository->getTransactionByEntityId($params['entity_id']);
         if ($entity) {
-            echo $this->jsonResponse->addField('entity_id', $entity->getEntityId())
+            return $this->jsonResponse->addField('entity_id', $entity->getEntityId())
                                     ->addField('user_id', $entity->getUserId())
                                     ->addField('transaction_status', $entity->getTransactionStatus())
                                     ->addField('transaction_fee', $entity->getTransactionFee())
@@ -33,15 +33,12 @@ class Get extends AbstractTransactionController
                                     ->addField('transaction_recipient_id', $entity->getTransactionRecipientId())
                                     ->addField('transaction_recipient_name', $entity->getTransactionRecipientName())
                                     ->addField('transaction_currency', $entity->getTransactionCurrency())
-                                    ->addField('transaction_details', $entity->getTransactionDetails())
-                                    ->getResponse();
-        } else {
-            echo $this->jsonResponse->addError(
-                404,
-                sprintf('Transaction with the id %s not found', $params['entity_id'])
-            )->getResponse();
+                                    ->addField('transaction_details', $entity->getTransactionDetails());
         }
-        
-        return;
+    
+        return $this->jsonResponse->addError(
+            404,
+            sprintf('Transaction with the id %s not found', $params['entity_id'])
+        );
     }
 }

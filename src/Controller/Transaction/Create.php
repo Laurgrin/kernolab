@@ -2,6 +2,8 @@
 
 namespace Kernolab\Controller\Transaction;
 
+use Kernolab\Controller\JsonResponse;
+
 class Create extends AbstractTransactionController
 {
     public const DATETIME_FORMAT = 'Y-m-d H:i:s';
@@ -11,9 +13,9 @@ class Create extends AbstractTransactionController
      *
      * @param array $params
      *
-     * @return void
+     * @return \Kernolab\Controller\JsonResponse
      */
-    public function execute(array $params)
+    public function execute(array $params): JsonResponse
     {
         $requiredKeys = [
             'user_id',
@@ -25,9 +27,7 @@ class Create extends AbstractTransactionController
         ];
         
         if (!$this->validateParams($params, $requiredKeys)) {
-            echo $this->jsonResponse->getResponse();
-            
-            return;
+            return $this->jsonResponse;
         }
         
         try {
@@ -39,21 +39,18 @@ class Create extends AbstractTransactionController
                     $params['transaction_status'] = 'created';
                     
                     $entity = $this->transactionRepository->createTransaction($params);
-                    echo $this->jsonResponse->addField('status', 'success')
+                    return $this->jsonResponse->addField('status', 'success')
                                             ->addField('code', 200)
                                             ->addField('message', 'Transaction created successfully.')
-                                            ->addField('entity_id', $entity->getEntityId())
-                                            ->getResponse();
-                    
-                    return;
+                                            ->addField('entity_id', $entity->getEntityId());
                 }
     
-                echo $this->jsonResponse->addError(403, 'Maximum lifetime transactions reached.')->getResponse();
-            } else {
-                echo $this->jsonResponse->addError(403, 'Hourly transaction limit exceeded.')->getResponse();
+                return $this->jsonResponse->addError(403, 'Maximum lifetime transactions reached.');
             }
+    
+            return $this->jsonResponse->addError(403, 'Hourly transaction limit exceeded.');
         } catch (\Exception $e) {
-            echo $this->jsonResponse->addError(500, $e->getMessage())->getResponse();
+            return $this->jsonResponse->addError(500, $e->getMessage());
         }
     }
     

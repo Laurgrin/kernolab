@@ -4,7 +4,6 @@ namespace Kernolab\Routing;
 
 use Kernolab\Controller\ControllerInterface;
 use Kernolab\Controller\JsonResponse;
-use Kernolab\Controller\JsonResponseInterface;
 use Kernolab\Exception\MySqlConnectionException;
 use Kernolab\Model\DataSource\MySql\DataSource;
 use Kernolab\Model\DataSource\MySql\QueryGenerator;
@@ -15,7 +14,7 @@ use Kernolab\Model\Entity\Transaction\TransactionRepository;
 /** @codeCoverageIgnore  */
 class Router extends AbstractRouter
 {
-    const CONTROLLER_NAMESPACE = "\\Kernolab\\Controller\\";
+    public const CONTROLLER_NAMESPACE = "\\Kernolab\\Controller\\";
     
     /**
      * @var array
@@ -27,10 +26,10 @@ class Router extends AbstractRouter
      *
      * @param \Kernolab\Controller\JsonResponseInterface $jsonResponse
      */
-    public function __construct(JsonResponseInterface $jsonResponse)
+    public function __construct(JsonResponse $jsonResponse)
     {
         parent::__construct($jsonResponse);
-        $this->routes = json_decode(file_get_contents(ROUTE_PATH), true);
+        $this->routes = json_decode(file_get_contents(ROUTE_PATH), true, 512, JSON_THROW_ON_ERROR);
     }
     
     /**
@@ -42,18 +41,18 @@ class Router extends AbstractRouter
      *
      * @return void
      */
-    public function route(string $requestUri, string $requestMethod)
+    public function route(string $requestUri, string $requestMethod): void
     {
-        $requestUri = explode("?", $requestUri)[0];
+        $requestUri = explode('?', $requestUri)[0];
         
         if (array_key_exists($requestUri, $this->routes)) {
             foreach ($this->routes as $uri => $route) {
                 if ($requestUri === $uri) {
-                    if ($route["method"] === $requestMethod) {
+                    if ($route['method'] === $requestMethod) {
                         try {
-                            $controller = $this->instantiateControllerClass($route["controller"]);
+                            $controller = $this->instantiateControllerClass($route['controller']);
                         } catch (MySqlConnectionException $e) {
-                            echo $this->jsonResponse->addError("500", "There has been an internal error.")
+                            echo $this->jsonResponse->addError(500, 'There has been an internal error.')
                                                     ->getResponse();
                             return;
                         }
@@ -61,14 +60,14 @@ class Router extends AbstractRouter
                         $controller->execute($this->sanitize($this->getRequestParams($requestMethod)));
                     } else {
                         echo $this->jsonResponse->addError(
-                            "405",
-                            "Method $requestMethod not allowed for this endpoint."
+                            405,
+                            sprintf('Method %s not allowed for this endpoint.', $requestMethod)
                         )->getResponse();
                     }
                 }
             }
         } else {
-            echo $this->jsonResponse->addError("404", "Endpoint $requestUri not found")->getResponse();
+            echo $this->jsonResponse->addError(404, sprintf('Endpoint %s not found', $requestUri))->getResponse();
         }
     }
     
@@ -101,9 +100,9 @@ class Router extends AbstractRouter
     protected function getRequestParams(string $method): array
     {
         switch ($method) {
-            case "GET":
+            case 'GET':
                 return $_GET;
-            case "POST":
+            case 'POST':
                 return $_POST;
             default:
                 return $_REQUEST;
@@ -125,7 +124,7 @@ class Router extends AbstractRouter
         $jsonResponse     = new JsonResponse();
         
         switch ($controllerEntity) {
-            case "Transaction":
+            case 'Transaction':
                 $dataSource              = new DataSource(new QueryGenerator(), new EntityParser());
                 $transactionProviderRule = new TransactionProviderRule();
                 $repository              = new TransactionRepository($dataSource, $transactionProviderRule);

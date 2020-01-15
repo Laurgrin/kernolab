@@ -2,7 +2,7 @@
 
 namespace Kernolab\Routing;
 
-use Kernolab\Controller\JsonResponseInterface;
+use Kernolab\Controller\JsonResponse;
 
 /**
  * Class AbstractRouter
@@ -12,16 +12,16 @@ use Kernolab\Controller\JsonResponseInterface;
 abstract class AbstractRouter implements RouterInterface
 {
     /**
-     * @var \Kernolab\Controller\JsonResponseInterface
+     * @var \Kernolab\Controller\JsonResponse
      */
     protected $jsonResponse;
     
     /**
      * AbstractRouter constructor.
      *
-     * @param \Kernolab\Controller\JsonResponseInterface $jsonResponse
+     * @param \Kernolab\Controller\JsonResponse $jsonResponse
      */
-    public function __construct(JsonResponseInterface $jsonResponse)
+    public function __construct(JsonResponse $jsonResponse)
     {
         $this->jsonResponse = $jsonResponse;
     }
@@ -35,5 +35,5 @@ abstract class AbstractRouter implements RouterInterface
      *
      * @return void
      */
-    abstract public function route(string $requestUri, string $requestMethod);
+    abstract public function route(string $requestUri, string $requestMethod): void;
 }

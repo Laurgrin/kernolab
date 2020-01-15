@@ -16,5 +16,5 @@ interface ControllerInterface
      *
      * @return mixed
      */
-    public function execute(array $params);
+    public function execute(array $params): JsonResponse;
 }
