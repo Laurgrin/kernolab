@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Controller\Transaction;
 
@@ -13,31 +13,33 @@ class Confirm extends AbstractTransactionController
      */
     public function execute(array $params)
     {
-        $requiredParams = ["entity_id", "verification_code"];
+        $requiredParams = ['entity_id', 'verification_code'];
         if (!$this->validateParams($params, $requiredParams)) {
             echo $this->jsonResponse->getResponse();
             
             return;
         }
         
-        $entityId           = $params["entity_id"];
-        $verificationCode = $params["verification_code"];
+        $entityId         = $params['entity_id'];
+        $verificationCode = $params['verification_code'];
         
         if ($this->validateTransactionConfirmation($entityId, $verificationCode)) {
             $transaction = $this->transactionRepository->confirmTransaction($entityId);
             if ($transaction) {
-                echo $this->jsonResponse->addField("status", "success")
-                                        ->addField("code", "200")
-                                        ->addField("message", "Transaction {$transaction->getEntityId()} confirmed successfully.")
+                echo $this->jsonResponse->addField('status', 'success')
+                                        ->addField('code', '200')
+                                        ->addField('message', sprintf('Transaction %s confirmed successfully.',
+                                                                      $transaction->getEntityId())
+                                        )
                                         ->getResponse();
             } else {
                 echo $this->jsonResponse->addError(
                     404,
-                    "Transaction ID {$entityId} is already confirmed or does not exist"
+                    sprintf('Transaction ID %s is already confirmed or does not exist', $entityId)
                 )->getResponse();
             }
         } else {
-            echo $this->jsonResponse->addError(401, "Invalid verification code")->getResponse();
+            echo $this->jsonResponse->addError(401, 'Invalid verification code')->getResponse();
             
             return;
         }
@@ -54,10 +56,6 @@ class Confirm extends AbstractTransactionController
      */
     protected function validateTransactionConfirmation($userId, $verificationCode): bool
     {
-        if ($verificationCode === "111") {
-            return true;
-        }
-        
-        return false;
+        return $verificationCode === '111';
     }
 }

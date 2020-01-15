@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Controller;
 
@@ -6,15 +6,15 @@ namespace Kernolab\Controller;
 abstract class AbstractController implements ControllerInterface
 {
     /**
-     * @var \Kernolab\Controller\JsonResponseInterface
+     * @var \Kernolab\Controller\JsonResponse
      */
     protected $jsonResponse;
     
-    public function __construct(JsonResponseInterface $jsonResponse)
+    public function __construct(JsonResponse $jsonResponse)
     {
         $this->jsonResponse = $jsonResponse;
-        header("Content-Type: application/json");
-        header("Encoding: utf-8");
+        header('Content-Type: application/json');
+        header('Encoding: utf-8');
     }
     
     /**
@@ -35,7 +35,7 @@ abstract class AbstractController implements ControllerInterface
         
         $missingParams = array_diff($requiredKeys, $requestKeys);
         foreach ($missingParams as $missingParam) {
-            $this->jsonResponse->addError(400, "Missing required argument {$missingParam}.");
+            $this->jsonResponse->addError(400, sprintf('Missing required argument %s.', $missingParam));
         }
         
         return false;

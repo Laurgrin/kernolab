@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Controller\Transaction;
 
@@ -15,7 +15,7 @@ class Process extends AbstractTransactionController
      */
     public function execute(array $params)
     {
-        $limit = $params["limit"];
+        $limit = $params['limit'];
         $this->transactionRepository->processTransactions($limit);
     }
 }

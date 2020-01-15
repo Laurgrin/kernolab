@@ -1,9 +1,9 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Controller\Transaction;
 
 use Kernolab\Controller\AbstractController;
-use Kernolab\Controller\JsonResponseInterface;
+use Kernolab\Controller\JsonResponse;
 use Kernolab\Model\Entity\Transaction\TransactionRepositoryInterface;
 
 /** @codeCoverageIgnore */
@@ -17,11 +17,11 @@ abstract class AbstractTransactionController extends AbstractController
     /**
      * AbstractTransactionController constructor.
      *
-     * @param \Kernolab\Controller\JsonResponseInterface                        $jsonResponse
+     * @param \Kernolab\Controller\JsonResponse                                 $jsonResponse
      * @param \Kernolab\Model\Entity\Transaction\TransactionRepositoryInterface $transactionRepository
      */
     public function __construct(
-        JsonResponseInterface $jsonResponse,
+        JsonResponse $jsonResponse,
         TransactionRepositoryInterface $transactionRepository
     ) {
         parent::__construct($jsonResponse);

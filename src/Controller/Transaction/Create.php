@@ -1,10 +1,10 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Controller\Transaction;
 
 class Create extends AbstractTransactionController
 {
-    const DATETIME_FORMAT = "Y-m-d H:i:s";
+    public const DATETIME_FORMAT = 'Y-m-d H:i:s';
     
     /**
      * Process a request and return a response
@@ -16,12 +16,12 @@ class Create extends AbstractTransactionController
     public function execute(array $params)
     {
         $requiredKeys = [
-            "user_id",
-            "transaction_details",
-            "transaction_recipient_id",
-            "transaction_recipient_name",
-            "transaction_amount",
-            "transaction_currency",
+            'user_id',
+            'transaction_details',
+            'transaction_recipient_id',
+            'transaction_recipient_name',
+            'transaction_amount',
+            'transaction_currency',
         ];
         
         if (!$this->validateParams($params, $requiredKeys)) {
@@ -31,29 +31,29 @@ class Create extends AbstractTransactionController
         }
         
         try {
-            $userId = $params["user_id"];
+            $userId = $params['user_id'];
             
             if ($this->getTransactionCount($userId) < 10) {
                 if ($this->canTransfer($userId)) {
-                    $params["transaction_fee"] = $this->getTransactionFee($userId, $params["transaction_amount"]);
-                    $params["transaction_status"] = "created";
+                    $params['transaction_fee']    = $this->getTransactionFee($userId, $params['transaction_amount']);
+                    $params['transaction_status'] = 'created';
                     
                     $entity = $this->transactionRepository->createTransaction($params);
-                    echo $this->jsonResponse->addField("status", "success")
-                                            ->addField("code", 200)
-                                            ->addField("message", "Transaction created successfully.")
-                                            ->addField("entity_id", $entity->getEntityId())
+                    echo $this->jsonResponse->addField('status', 'success')
+                                            ->addField('code', 200)
+                                            ->addField('message', 'Transaction created successfully.')
+                                            ->addField('entity_id', $entity->getEntityId())
                                             ->getResponse();
                     
                     return;
-                } else {
-                    echo $this->jsonResponse->addError("403", "Maximum lifetime transactions reached.")->getResponse();
                 }
+    
+                echo $this->jsonResponse->addError(403, 'Maximum lifetime transactions reached.')->getResponse();
             } else {
-                echo $this->jsonResponse->addError("403", "Hourly transaction limit exceeded.")->getResponse();
+                echo $this->jsonResponse->addError(403, 'Hourly transaction limit exceeded.')->getResponse();
             }
         } catch (\Exception $e) {
-            echo $this->jsonResponse->addError("500", $e->getMessage())->getResponse();
+            echo $this->jsonResponse->addError(500, $e->getMessage())->getResponse();
         }
     }
     
@@ -68,9 +68,9 @@ class Create extends AbstractTransactionController
      */
     protected function getTransactionCount(int $userId): int
     {
-        $count   = 0;
+        $count        = 0;
         $transactions = $this->transactionRepository->getTransactionsByUserId($userId);
-        $now     = new \DateTime();
+        $now          = new \DateTime();
         
         foreach ($transactions as $transaction) {
             $transactionTime = \DateTime::createFromFormat(self::DATETIME_FORMAT, $transaction->getCreatedAt());
@@ -99,22 +99,17 @@ class Create extends AbstractTransactionController
     protected function getTransactionFee(int $userId, float $transactionAmount): float
     {
         $transactions = $this->transactionRepository->getTransactionsByUserId($userId);
-        $now     = new \DateTime();
+        $now          = new \DateTime();
         
         /* Filters out the transactions not made today */
-        $dailyTransactions = array_filter($transactions, function($transaction) use ($now) {
-            /** @var \Kernolab\Model\Entity\Transaction\Transaction $transaction*/
+        $dailyTransactions = array_filter($transactions, static function($transaction) use ($now) {
+            /** @var \Kernolab\Model\Entity\Transaction\Transaction $transaction */
             $transactionTime = \DateTime::createFromFormat(self::DATETIME_FORMAT, $transaction->getCreatedAt());
             $timeDifference  = $now->diff($transactionTime);
             
-            if ($timeDifference->y > 0 || $timeDifference->m > 0 || $timeDifference->d >= 1) {
-                return false;
-            }
-            
-            return true;
-        }
-        );
-    
+            return !($timeDifference->y > 0 || $timeDifference->m > 0 || $timeDifference->d >= 1);
+        });
+        
         /* Sum amounts by currency */
         $amountsByCurrency = [];
         foreach ($dailyTransactions as $dailyTransaction) {
@@ -126,7 +121,7 @@ class Create extends AbstractTransactionController
                 return $transactionAmount * 0.05;
             }
         }
-    
+        
         return $transactionAmount * 0.1;
     }
     
@@ -141,7 +136,7 @@ class Create extends AbstractTransactionController
      */
     protected function canTransfer(int $userId): bool
     {
-        $transactions           = $this->transactionRepository->getTransactionsByUserId($userId);
+        $transactions      = $this->transactionRepository->getTransactionsByUserId($userId);
         $amountsByCurrency = [];
         
         foreach ($transactions as $transaction) {

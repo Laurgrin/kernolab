@@ -1,8 +1,8 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Controller;
 
-class JsonResponse implements JsonResponseInterface
+class JsonResponse
 {
     /**
      * @var array
@@ -15,9 +15,9 @@ class JsonResponse implements JsonResponseInterface
      * @param string $key
      * @param mixed  $value
      *
-     * @return \Kernolab\Controller\JsonResponseInterface
+     * @return \Kernolab\Controller\JsonResponse
      */
-    public function addField(string $key, $value): JsonResponseInterface
+    public function addField(string $key, $value): JsonResponse
     {
         $this->response[$key] = $value;
         
@@ -30,15 +30,15 @@ class JsonResponse implements JsonResponseInterface
      * @param int    $code
      * @param string $message
      *
-     * @return \Kernolab\Controller\JsonResponseInterface
+     * @return \Kernolab\Controller\JsonResponse
      */
-    public function addError(int $code, string $message): JsonResponseInterface
+    public function addError(int $code, string $message): JsonResponse
     {
         
-        $this->response["status"]   = "error";
-        $this->response["errors"][] = [
-            "code"    => $code,
-            "message" => $message,
+        $this->response['status']   = 'error';
+        $this->response['errors'][] = [
+            'code'    => $code,
+            'message' => $message,
         ];
         
         return $this;
@@ -51,7 +51,11 @@ class JsonResponse implements JsonResponseInterface
      */
     public function getResponse(): string
     {
-        $response       = json_encode($this->response, JSON_UNESCAPED_LINE_TERMINATORS );
+        $response       = json_encode(
+            $this->response,
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_LINE_TERMINATORS,
+            512
+        );
         $this->response = [];
         
         return $response;
