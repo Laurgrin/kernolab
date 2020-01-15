@@ -2,20 +2,12 @@
 
 namespace Kernolab\Exception;
 
-use Exception;
-
 /**
  * Class MySqlConnectionException
  * @package Kernolab\Exception
  * @codeCoverageIgnore
  */
-class MySqlConnectionException extends Exception
+class MySqlConnectionException extends AbstractException
 {
-    public function __construct($message, $code = 2, Exception $previous = null) {
-        parent::__construct($message, $code, $previous);
-    }
-    
-    public function __toString() {
-        return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
-    }
+
 }
