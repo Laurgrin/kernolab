@@ -2,38 +2,14 @@
 
 namespace Kernolab\Routing;
 
-use Kernolab\Controller\ControllerInterface;
-use Kernolab\Controller\JsonResponse;
-use Kernolab\Exception\MySqlConnectionException;
-use Kernolab\Model\DataSource\MySql\DataSource;
-use Kernolab\Model\DataSource\MySql\QueryGenerator;
-use Kernolab\Model\Entity\EntityParser;
-use Kernolab\Model\Entity\Transaction\TransactionProviderRule;
-use Kernolab\Model\Entity\Transaction\TransactionRepository;
+use Kernolab\Exception\ContainerException;
+use Kernolab\Routing\Request\Request;
+use ReflectionException;
 
-/** @codeCoverageIgnore  */
 class Router extends AbstractRouter
 {
-    public const CONTROLLER_NAMESPACE = "\\Kernolab\\Controller\\";
-    
     /**
-     * @var array
-     */
-    protected $routes;
-    
-    /**
-     * Router constructor.
-     *
-     * @param \Kernolab\Controller\JsonResponseInterface $jsonResponse
-     */
-    public function __construct(JsonResponse $jsonResponse)
-    {
-        parent::__construct($jsonResponse);
-        $this->routes = json_decode(file_get_contents(ROUTE_PATH), true, 512, JSON_THROW_ON_ERROR);
-    }
-    
-    /**
-     * Route the request to an appropriate handler (controller).
+     * Request the request to an appropriate handler (controller).
      *
      * @param string $requestUri
      *
@@ -43,95 +19,31 @@ class Router extends AbstractRouter
      */
     public function route(string $requestUri, string $requestMethod): void
     {
-        $requestUri = explode('?', $requestUri)[0];
-        
-        if (array_key_exists($requestUri, $this->routes)) {
-            foreach ($this->routes as $uri => $route) {
-                if ($requestUri === $uri) {
-                    if ($route['method'] === $requestMethod) {
-                        try {
-                            $controller = $this->instantiateControllerClass($route['controller']);
-                        } catch (MySqlConnectionException $e) {
-                            echo $this->jsonResponse->addError(500, 'There has been an internal error.')
-                                                    ->getResponse();
-                            return;
-                        }
-                        
-                        $controller->execute($this->sanitize($this->getRequestParams($requestMethod)));
-                    } else {
-                        echo $this->jsonResponse->addError(
-                            405,
-                            sprintf('Method %s not allowed for this endpoint.', $requestMethod)
-                        )->getResponse();
-                    }
+        try {
+            /** @var Request $request */
+            $request = $this->container->get(Request::class);
+            $request->setRequestUri(explode('?', $requestUri)[0]);
+    
+            if (array_key_exists($request->getRequestUri(), $this->routes)) {
+                $request->setRequestMethod($this->routes[$request->getRequestUri()]['method'])
+                      ->setController($this->routes[$request->getRequestUri()]['controller']);
+    
+                if ($request->getRequestMethod() === $requestMethod) {
+                    $params = '_' . strtoupper($request->getRequestMethod());
+                    $request->setRequestParams($this->requestSanitizer->sanitize($$params));
+                    /** @var \Kernolab\Controller\AbstractController $controller */
+                    $controller = $this->container->get(self::CONTROLLER_NAMESPACE . $request->getController());
+                    $this->jsonResponse = $controller->execute($request->getRequestParams());
                 }
+            } else {
+                $this->jsonResponse->addError(404, sprintf('Endpoint %s not found', $requestUri));
             }
-        } else {
-            echo $this->jsonResponse->addError(404, sprintf('Endpoint %s not found', $requestUri))->getResponse();
-        }
-    }
-    
-    /**
-     * Filters the given array of data (POST or GET) and returns the sanitized array.
-     *
-     * @param array $data
-     *
-     * @return array
-     */
-    protected function sanitize(array $data): array
-    {
-        $filteredData = [];
-        
-        foreach ($data as $key => $value) {
-            $sanitizedValue     = filter_var(trim($value), FILTER_SANITIZE_STRING);
-            $filteredData[$key] = $sanitizedValue;
-        }
-        
-        return $filteredData;
-    }
-    
-    /**
-     * Gets request params based on the request method.
-     *
-     * @param string $method
-     *
-     * @return array
-     */
-    protected function getRequestParams(string $method): array
-    {
-        switch ($method) {
-            case 'GET':
-                return $_GET;
-            case 'POST':
-                return $_POST;
-            default:
-                return $_REQUEST;
-        }
-    }
-    
-    /**
-     * Instantiates a controller based on controller name
-     *
-     * @param string $controllerName
-     *
-     * @return \Kernolab\Controller\ControllerInterface
-     * @throws \Kernolab\Exception\MySqlConnectionException
-     */
-    protected function instantiateControllerClass(string $controllerName): ControllerInterface
-    {
-        $controllerEntity = explode("\\", $controllerName)[0];
-        $controllerFqn    = self::CONTROLLER_NAMESPACE . $controllerName;
-        $jsonResponse     = new JsonResponse();
-        
-        switch ($controllerEntity) {
-            case 'Transaction':
-                $dataSource              = new DataSource(new QueryGenerator(), new EntityParser());
-                $transactionProviderRule = new TransactionProviderRule();
-                $repository              = new TransactionRepository($dataSource, $transactionProviderRule);
-                
-                return new $controllerFqn($jsonResponse, $repository);
-            default:
-                return new $controllerFqn($jsonResponse);
+        } catch (ContainerException $e) {
+            $this->jsonResponse->addError(500, 'An internal error has been encountered.');
+        } catch (ReflectionException $e) {
+            $this->jsonResponse->addError(500, 'An internal error has been encountered.');
+        } finally {
+            $this->responseHandler->handleResponse($this->jsonResponse);
         }
     }
 }

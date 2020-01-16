@@ -2,6 +2,8 @@
 
 namespace Kernolab\Controller;
 
+use PHPUnit\Util\Json;
+
 class JsonResponse
 {
     /**
@@ -45,9 +47,10 @@ class JsonResponse
     }
     
     /**
-     * Returns a JSON encoded response.
+     * Returns a JSON encoded response (or throws an error) and clears the response data array.
      *
      * @return string
+     * @throws \JsonException
      */
     public function getResponse(): string
     {

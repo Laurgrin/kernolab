@@ -10,7 +10,7 @@ namespace Kernolab\Routing;
 interface RouterInterface
 {
     /**
-     * Route the request to an appropriate handler (controller).
+     * Request the request to an appropriate handler (controller).
      *
      * @param string $requestUri
      *

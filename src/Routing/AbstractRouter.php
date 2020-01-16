@@ -1,8 +1,11 @@
-<?php  declare(strict_types = 1);
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Routing;
 
 use Kernolab\Controller\JsonResponse;
+use Kernolab\Service\DependencyInjectionContainer;
+use Kernolab\Service\RequestSanitizer;
+use Kernolab\Service\ResponseHandler;
 
 /**
  * Class AbstractRouter
@@ -11,29 +14,56 @@ use Kernolab\Controller\JsonResponse;
  */
 abstract class AbstractRouter implements RouterInterface
 {
+    public const CONTROLLER_NAMESPACE = "\\Kernolab\\Controller\\";
+    
     /**
-     * @var \Kernolab\Controller\JsonResponse
+     * @var JsonResponse
      */
     protected $jsonResponse;
     
     /**
-     * AbstractRouter constructor.
-     *
-     * @param \Kernolab\Controller\JsonResponse $jsonResponse
+     * @var array
      */
-    public function __construct(JsonResponse $jsonResponse)
-    {
-        $this->jsonResponse = $jsonResponse;
-    }
+    protected $routes;
     
     /**
-     * Route the request to an appropriate handler (controller).
-     *
-     * @param string $requestUri
-     *
-     * @param string $requestMethod
-     *
-     * @return void
+     * @var DependencyInjectionContainer
      */
-    abstract public function route(string $requestUri, string $requestMethod): void;
+    protected $container;
+    
+    /**
+     * @var RequestSanitizer
+     */
+    protected $requestSanitizer;
+    
+    /**
+     * @var ResponseHandler
+     */
+    protected $responseHandler;
+    
+    /**
+     * AbstractRouter constructor.
+     *
+     * @param JsonResponse                 $jsonResponse
+     * @param DependencyInjectionContainer $container
+     * @param RequestSanitizer             $requestSanitizer
+     * @param ResponseHandler              $responseHandler
+     */
+    public function __construct(
+        JsonResponse $jsonResponse,
+        DependencyInjectionContainer $container,
+        RequestSanitizer $requestSanitizer,
+        ResponseHandler $responseHandler
+    ) {
+        $this->jsonResponse     = $jsonResponse;
+        $this->container        = $container;
+        $this->requestSanitizer = $requestSanitizer;
+        $this->responseHandler = $responseHandler;
+        $this->routes           = json_decode(
+            file_get_contents(ROUTE_PATH),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+    }
 }

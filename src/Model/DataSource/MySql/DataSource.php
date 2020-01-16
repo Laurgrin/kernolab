@@ -1,4 +1,4 @@
-<?php  declare(strict_types = 1);
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Model\DataSource\MySql;
 
@@ -8,11 +8,13 @@ use Kernolab\Model\DataSource\QueryGeneratorInterface;
 use Kernolab\Model\DataSource\DataSourceInterface;
 use Kernolab\Model\Entity\EntityInterface;
 use Kernolab\Model\Entity\EntityParserInterface;
+use mysqli;
+use mysqli_stmt;
 
 class DataSource implements DataSourceInterface
 {
     /**
-     * @var \mysqli
+     * @var mysqli
      */
     protected $connection;
     
@@ -22,22 +24,27 @@ class DataSource implements DataSourceInterface
     protected $queryGenerator;
     
     /**
-     * @var \Kernolab\Model\Entity\EntityParserInterface
+     * @var EntityParserInterface
      */
     protected $entityParser;
     
     /**
      * DataSource constructor.
      *
-     * @param QueryGeneratorInterface                      $queryGenerator
+     * @param QueryGeneratorInterface $queryGenerator
      *
-     * @param \Kernolab\Model\Entity\EntityParserInterface $entityParser
+     * @param EntityParserInterface   $entityParser
      *
      * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function __construct(QueryGeneratorInterface $queryGenerator, EntityParserInterface $entityParser)
     {
-        $credentials          = json_decode(file_get_contents(ENV_PATH), true)["db"];
+        $credentials          = json_decode(
+                                    file_get_contents(ENV_PATH),
+                                    true,
+                                    512,
+                                    JSON_THROW_ON_ERROR
+                                )['db'];
         $this->queryGenerator = $queryGenerator;
         $this->entityParser   = $entityParser;
         $this->setConnection($credentials);
@@ -50,20 +57,20 @@ class DataSource implements DataSourceInterface
      *
      * @throws \Kernolab\Exception\MySqlConnectionException
      */
-    protected function setConnection(array $credentials)
+    protected function setConnection(array $credentials): void
     {
         $connection = mysqli_connect(
-            $credentials["host"],
-            $credentials["user"],
-            $credentials["password"],
-            $credentials["database"]
+            $credentials['host'],
+            $credentials['user'],
+            $credentials['password'],
+            $credentials['database']
         );
         
         if (!$connection) {
             $errorNumber  = mysqli_connect_errno();
             $errorMessage = mysqli_connect_error();
             throw new MySqlConnectionException(
-                "Unable to connect to the database. Error $errorNumber: $errorMessage"
+                sprintf('Unable to connect to the database. Error %s: %s', $errorNumber, $errorMessage)
             );
         }
         
@@ -75,15 +82,15 @@ class DataSource implements DataSourceInterface
      *
      * @param $query
      *
-     * @return \mysqli_stmt
-     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @return mysqli_stmt
+     * @throws MySqlPreparedStatementException
      */
-    protected function prepare($query)
+    protected function prepare($query): mysqli_stmt
     {
         $statement = $this->connection->prepare($query);
         
         if (!$statement) {
-            $this->throwException($this->connection, "An error occurred while preparing the statement: ");
+            $this->throwException($this->connection, 'An error occurred while preparing the statement: ');
         }
         
         return $statement;
@@ -92,16 +99,18 @@ class DataSource implements DataSourceInterface
     /**
      * Binds params to a statement. Amount of types must match params.
      *
-     * @param \mysqli_stmt $statement
-     * @param string[]     $params
+     * @param mysqli_stmt $statement
+     * @param string[]    $params
      *
-     * @return \mysqli_stmt
-     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @return mysqli_stmt
+     * @throws MySqlPreparedStatementException
      */
-    protected function bindParams(\mysqli_stmt $statement, array $params)
+    protected function bindParams(mysqli_stmt $statement, array $params): mysqli_stmt
     {
-        if (!$statement->bind_param(str_repeat("s", count($params)), ...array_values($params))) {
-            $this->throwException($statement, "An error occurred while binding params to the statement:");
+        $values = array_values($params);
+        
+        if (!$statement->bind_param(str_repeat('s', count($params)), ...$values)) {
+            $this->throwException($statement, 'An error occurred while binding params to the statement:');
         }
         
         return $statement;
@@ -110,15 +119,15 @@ class DataSource implements DataSourceInterface
     /**
      * Executes a prepared statement.
      *
-     * @param \mysqli_stmt $statement
+     * @param mysqli_stmt $statement
      *
-     * @return \mysqli_stmt
-     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @return mysqli_stmt
+     * @throws MySqlPreparedStatementException
      */
-    protected function executeStatement(\mysqli_stmt $statement)
+    protected function executeStatement(mysqli_stmt $statement): mysqli_stmt
     {
         if (!$statement->execute()) {
-            $this->throwException($statement, "An error occurred while executing the statement: ");
+            $this->throwException($statement, 'An error occurred while executing the statement: ');
         }
         
         return $statement;
@@ -127,17 +136,17 @@ class DataSource implements DataSourceInterface
     /**
      * Throws an exception with customized context message, listing all errors that occurred.
      *
-     * @param \mysqli_stmt $statement
-     * @param string       $contextMessage
+     * @param mysqli_stmt|mysqli $statement
+     * @param string             $contextMessage
      *
      * @return void
-     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws MySqlPreparedStatementException
      */
-    protected function throwException($statement, string $contextMessage)
+    protected function throwException($statement, string $contextMessage): void
     {
         if ($statement->error_list) {
             foreach ($statement->error_list as $error) {
-                $contextMessage .= "\n{$error["error"]}";
+                $contextMessage .= "\n{$error['error']}";
             }
             
             throw new MySqlPreparedStatementException($contextMessage);
@@ -147,21 +156,23 @@ class DataSource implements DataSourceInterface
     /**
      * Gets results from an executed statement.
      *
-     * @param \mysqli_stmt $statement
-     * @param bool         $closeOnReturn Should statement be closed when results are returned. Defaults to true.
+     * @param mysqli_stmt $statement
+     * @param bool        $closeOnReturn Should statement be closed when results are returned. Defaults to true.
      *
      * @return mixed
-     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws MySqlPreparedStatementException
      */
-    protected function getResult(\mysqli_stmt $statement, bool $closeOnReturn = true)
+    protected function getResult(mysqli_stmt $statement, bool $closeOnReturn = true)
     {
         /* If metadata is false AND there are no errors, it means it wasn't a select statement,
         and we can return affected rows instead. If there is an error, something went terribly wrong.
         If we have metadata, it means it was a SELECT statement (or SHOW, EXPLAIN, etc.), then we return that. */
-        if (!$statement->result_metadata() && empty($statement->error_list)) {
+        if (empty($statement->error_list) && !$statement->result_metadata()) {
             return $statement->affected_rows;
-        } elseif (!$statement->result_metadata() && empty($statement->error_list)) {
-            $this->throwException($statement, "Error while trying to check metadata: ");
+        }
+        
+        if (!empty($statement->error_list)) {
+            $this->throwException($statement, 'Error while trying to check metadata: ');
         }
         
         $result = $statement->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -180,15 +191,15 @@ class DataSource implements DataSourceInterface
      * @param string                                $table
      *
      * @return array
-     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws MySqlPreparedStatementException
      */
     public function get(array $criteria = [], string $table = ""): array
     {
         $parsedCriteria = $this->queryGenerator->parseRetrieval($table, $criteria);
-        $command        = $parsedCriteria["query"];
+        $command        = $parsedCriteria['query'];
         
         $results = $this->getResult(
-            $this->executeStatement($this->bindParams($this->prepare($command), $parsedCriteria["args"]))
+            $this->executeStatement($this->bindParams($this->prepare($command), $parsedCriteria['args']))
         );
         
         return $results;
@@ -197,30 +208,26 @@ class DataSource implements DataSourceInterface
     /**
      * Saves an entity to DataSource. If a new entity was created, it will be returned with its ID set.
      *
-     * @param \Kernolab\Model\Entity\EntityInterface $entity
+     * @param EntityInterface $entity
      *
-     * @return \Kernolab\Model\Entity\EntityInterface
-     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @return EntityInterface
+     * @throws MySqlPreparedStatementException
      */
     public function set(EntityInterface $entity): EntityInterface
     {
-        $savedEntities = [];
-        
         /* We only want to prepare the statement once, and then bind and execute it with different values. */
-        $entityProperties  = $this->entityParser->getEntityProperties($entity);
-        $columns       = array_keys($entityProperties);
-        $query        =
+        $entityProperties = $this->entityParser->getEntityProperties($entity);
+        $columns          = array_keys($entityProperties);
+        $query            =
             $this->queryGenerator->parseInsertion($this->entityParser->getEntityTarget($entity), $columns);
-        $statement    = $this->prepare($query);
-        if ($entity->getEntityId() == 0) {
-            unset($entityProperties["entity_id"]);
+        $statement        = $this->prepare($query);
+        if ($entity->getEntityId() === 0) {
+            unset($entityProperties['entity_id']);
         }
-    
+        
         $statement = $this->bindParams($statement, array_values($entityProperties));
         $this->executeStatement($statement);
         $entity->setEntityId($this->connection->insert_id);
-        $savedEntities[] = $entity;
-       
         
         return $entity;
     }
