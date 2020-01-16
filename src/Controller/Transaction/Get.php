@@ -9,18 +9,18 @@ class Get extends AbstractTransactionController
     /**
      * Process a request and return a response
      *
-     * @param array $params
+     * @param array $requestParams
      *
      * @return JsonResponse
      */
-    public function execute(array $params): JsonResponse
+    public function execute(array $requestParams): JsonResponse
     {
         $requiredParams = ['entity_id'];
-        if (!$this->validateParams($params, $requiredParams)) {
+        if (!$this->validateParams($requestParams, $requiredParams)) {
             return $this->jsonResponse;
         }
         
-        $entity = $this->transactionRepository->getTransactionByEntityId($params['entity_id']);
+        $entity = $this->transactionService->getTransactionByEntityId($requestParams['entity_id']);
         if ($entity) {
             return $this->jsonResponse->addField('entity_id', $entity->getEntityId())
                                       ->addField('user_id', $entity->getUserId())
@@ -38,7 +38,7 @@ class Get extends AbstractTransactionController
         
         return $this->jsonResponse->addError(
             404,
-            sprintf('Transaction with the id %s not found', $params['entity_id'])
+            sprintf('Transaction with the id %s not found', $requestParams['entity_id'])
         );
     }
 }

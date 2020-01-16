@@ -12,23 +12,23 @@ interface EntityInterface
     /**
      * Returns the entity's ID (primary key).
      *
-     * @return string
+     * @return int
      */
-    public function getEntityId();
+    public function getEntityId(): int;
     
     /**
      * Returns the time when entity was created.
      *
      * @return string
      */
-    public function getCreatedAt();
+    public function getCreatedAt(): string;
     
     /**
      * Returns the time when the entity was last updated.
      *
      * @return mixed
      */
-    public function getUpdatedAt();
+    public function getUpdatedAt(): string;
     
     /**
      * Sets the entity ID.

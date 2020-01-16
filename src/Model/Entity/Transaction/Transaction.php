@@ -1,4 +1,4 @@
-<?php  declare(strict_types = 1);
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Model\Entity\Transaction;
 
@@ -70,9 +70,9 @@ class Transaction implements EntityInterface
     /**
      * Returns the entity's ID (primary key).
      *
-     * @return string
+     * @return int
      */
-    public function getEntityId()
+    public function getEntityId(): int
     {
         return $this->entityId;
     }
@@ -82,7 +82,7 @@ class Transaction implements EntityInterface
      *
      * @return string
      */
-    public function getCreatedAt()
+    public function getCreatedAt(): string
     {
         return $this->createdAt;
     }
@@ -92,7 +92,7 @@ class Transaction implements EntityInterface
      *
      * @return mixed
      */
-    public function getUpdatedAt()
+    public function getUpdatedAt(): string
     {
         return $this->updatedAt;
     }
@@ -100,7 +100,7 @@ class Transaction implements EntityInterface
     /**
      * @return int
      */
-    public function getUserId()
+    public function getUserId(): int
     {
         return $this->userId;
     }
@@ -108,7 +108,7 @@ class Transaction implements EntityInterface
     /**
      * @return string
      */
-    public function getTransactionStatus()
+    public function getTransactionStatus(): string
     {
         return $this->transactionStatus;
     }
@@ -116,9 +116,9 @@ class Transaction implements EntityInterface
     /**
      * @param string $transactionStatus
      *
-     * @return \Kernolab\Model\Entity\Transaction\Transaction
+     * @return Transaction
      */
-    public function setTransactionStatus($transactionStatus)
+    public function setTransactionStatus(string $transactionStatus): Transaction
     {
         $this->transactionStatus = $transactionStatus;
         
@@ -128,7 +128,7 @@ class Transaction implements EntityInterface
     /**
      * @return float
      */
-    public function getTransactionFee()
+    public function getTransactionFee(): float
     {
         return $this->transactionFee;
     }
@@ -136,7 +136,7 @@ class Transaction implements EntityInterface
     /**
      * @return string
      */
-    public function getTransactionProvider()
+    public function getTransactionProvider(): string
     {
         return $this->transactionProvider;
     }
@@ -144,7 +144,7 @@ class Transaction implements EntityInterface
     /**
      * @return float
      */
-    public function getTransactionAmount()
+    public function getTransactionAmount(): float
     {
         return $this->transactionAmount;
     }
@@ -152,7 +152,7 @@ class Transaction implements EntityInterface
     /**
      * @return int
      */
-    public function getTransactionRecipientId()
+    public function getTransactionRecipientId(): int
     {
         return $this->transactionRecipientId;
     }
@@ -160,7 +160,7 @@ class Transaction implements EntityInterface
     /**
      * @return string
      */
-    public function getTransactionRecipientName()
+    public function getTransactionRecipientName(): string
     {
         return $this->transactionRecipientName;
     }
@@ -168,7 +168,7 @@ class Transaction implements EntityInterface
     /**
      * @return string
      */
-    public function getTransactionCurrency()
+    public function getTransactionCurrency(): string
     {
         return $this->transactionCurrency;
     }

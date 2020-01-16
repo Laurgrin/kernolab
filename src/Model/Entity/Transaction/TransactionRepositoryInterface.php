@@ -1,6 +1,8 @@
-<?php  declare(strict_types = 1);
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Model\Entity\Transaction;
+
+use Kernolab\Model\Entity\EntityInterface;
 
 interface TransactionRepositoryInterface
 {
@@ -9,16 +11,17 @@ interface TransactionRepositoryInterface
      *
      * @param array $params
      *
-     * @return \Kernolab\Model\Entity\Transaction\Transaction
+     * @return EntityInterface
+     * @throws \Kernolab\Exception\TransactionCreationException
      */
-    public function createTransaction(array $params): Transaction;
+    public function createTransaction(array $params): ?EntityInterface;
     
     /**
      * Get all transactions made by a specific user ID.
      *
      * @param int $userId
      *
-     * @return \Kernolab\Model\Entity\Transaction\Transaction[]
+     * @return EntityInterface[]
      */
     public function getTransactionsByUserId(int $userId): array;
     
@@ -27,25 +30,25 @@ interface TransactionRepositoryInterface
      *
      * @param int $entityId
      *
-     * @return \Kernolab\Model\Entity\Transaction\Transaction
+     * @return EntityInterface
      */
-    public function confirmTransaction(int $entityId): ?Transaction;
+    public function confirmTransaction(int $entityId): ?EntityInterface;
     
     /**
      * Gets a specific transaction by transaction ID.
      *
      * @param int $entityId
      *
-     * @return \Kernolab\Model\Entity\Transaction\Transaction
+     * @return EntityInterface
      */
-    public function getTransactionByEntityId(int $entityId): ?Transaction;
+    public function getTransactionByEntityId(int $entityId): ?EntityInterface;
     
     /**
      * Processes unprocessed transactions up to the $limit. No limit if 0.
      *
      * @param int $limit
      *
-     * @return \Kernolab\Model\Entity\Transaction\Transaction[]
+     * @return EntityInterface[]
      */
     public function processTransactions(int $limit = 0): array;
 }

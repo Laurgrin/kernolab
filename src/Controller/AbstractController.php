@@ -2,7 +2,10 @@
 
 namespace Kernolab\Controller;
 
-/** @codeCoverageIgnore  */
+use Kernolab\Service\Logger;
+use Kernolab\Service\RequestValidator;
+
+/** @codeCoverageIgnore */
 abstract class AbstractController implements ControllerInterface
 {
     /**
@@ -10,32 +13,27 @@ abstract class AbstractController implements ControllerInterface
      */
     protected $jsonResponse;
     
-    public function __construct(JsonResponse $jsonResponse)
-    {
-        $this->jsonResponse = $jsonResponse;
-    }
+    /**
+     * @var \Kernolab\Service\RequestValidator
+     */
+    protected $requestValidator;
     
     /**
-     * Validates if all the required request params are there. Does not care about their values though.
-     *
-     * @param array $params
-     *
-     * @param array $requiredKeys
-     *
-     * @return bool
+     * @var \Kernolab\Service\Logger
      */
-    protected function validateParams(array $params, array $requiredKeys): bool
+    protected $logger;
+    
+    /**
+     * AbstractController constructor.
+     *
+     * @param \Kernolab\Controller\JsonResponse  $jsonResponse
+     * @param \Kernolab\Service\RequestValidator $requestValidator
+     * @param \Kernolab\Service\Logger           $logger
+     */
+    public function __construct(JsonResponse $jsonResponse, RequestValidator $requestValidator, Logger $logger)
     {
-        $requestKeys  = array_keys($params);
-        if (array_intersect($requestKeys, $requiredKeys) === $requiredKeys) {
-            return true;
-        }
-        
-        $missingParams = array_diff($requiredKeys, $requestKeys);
-        foreach ($missingParams as $missingParam) {
-            $this->jsonResponse->addError(400, sprintf('Missing required argument %s.', $missingParam));
-        }
-        
-        return false;
+        $this->jsonResponse     = $jsonResponse;
+        $this->requestValidator = $requestValidator;
+        $this->logger = $logger;
     }
 }

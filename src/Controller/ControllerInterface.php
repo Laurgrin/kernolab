@@ -12,9 +12,9 @@ interface ControllerInterface
     /**
      * Process a request and return a response
      *
-     * @param array $params
+     * @param array $requestParams
      *
      * @return JsonResponse
      */
-    public function execute(array $params): JsonResponse;
+    public function execute(array $requestParams): JsonResponse;
 }

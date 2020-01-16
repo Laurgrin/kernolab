@@ -146,7 +146,7 @@ class DataSource implements DataSourceInterface
     {
         if ($statement->error_list) {
             foreach ($statement->error_list as $error) {
-                $contextMessage .= "\n{$error['error']}";
+                $contextMessage .= sprintf(PHP_EOL . '%s', $error['error']);
             }
             
             throw new MySqlPreparedStatementException($contextMessage);
@@ -193,7 +193,7 @@ class DataSource implements DataSourceInterface
      * @return array
      * @throws MySqlPreparedStatementException
      */
-    public function get(array $criteria = [], string $table = ""): array
+    public function get(array $criteria = [], string $table = ''): array
     {
         $parsedCriteria = $this->queryGenerator->parseRetrieval($table, $criteria);
         $command        = $parsedCriteria['query'];

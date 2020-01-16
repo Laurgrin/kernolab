@@ -9,22 +9,22 @@ class Confirm extends AbstractTransactionController
     /**
      * Process a request and return a response
      *
-     * @param array $params
+     * @param array $requestParams
      *
      * @return JsonResponse
      */
-    public function execute(array $params): JsonResponse
+    public function execute(array $requestParams): JsonResponse
     {
         $requiredParams = ['entity_id', 'verification_code'];
-        if (!$this->validateParams($params, $requiredParams)) {
+        if (!$this->validateParams($requestParams, $requiredParams)) {
             return $this->jsonResponse;
         }
         
-        $entityId         = $params['entity_id'];
-        $verificationCode = $params['verification_code'];
+        $entityId         = $requestParams['entity_id'];
+        $verificationCode = $requestParams['verification_code'];
         
         if ($this->validateTransactionConfirmation($entityId, $verificationCode)) {
-            $transaction = $this->transactionRepository->confirmTransaction($entityId);
+            $transaction = $this->transactionService->confirmTransaction($entityId);
             if ($transaction) {
                 return $this->jsonResponse->addField('status', 'success')
                                         ->addField('code', '200')

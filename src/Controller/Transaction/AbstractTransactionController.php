@@ -4,27 +4,33 @@ namespace Kernolab\Controller\Transaction;
 
 use Kernolab\Controller\AbstractController;
 use Kernolab\Controller\JsonResponse;
-use Kernolab\Model\Entity\Transaction\TransactionRepositoryInterface;
+use Kernolab\Service\Logger;
+use Kernolab\Service\RequestValidator;
+use Kernolab\Service\TransactionService;
 
 /** @codeCoverageIgnore */
 abstract class AbstractTransactionController extends AbstractController
 {
     /**
-     * @var \Kernolab\Model\Entity\Transaction\TransactionRepository
+     * @var TransactionService
      */
-    protected $transactionRepository;
+    protected $transactionService;
     
     /**
      * AbstractTransactionController constructor.
      *
-     * @param \Kernolab\Controller\JsonResponse                                 $jsonResponse
-     * @param \Kernolab\Model\Entity\Transaction\TransactionRepositoryInterface $transactionRepository
+     * @param JsonResponse             $jsonResponse
+     * @param RequestValidator         $requestValidator
+     * @param \Kernolab\Service\Logger $logger
+     * @param TransactionService       $transactionService
      */
     public function __construct(
         JsonResponse $jsonResponse,
-        TransactionRepositoryInterface $transactionRepository
+        RequestValidator $requestValidator,
+        Logger $logger,
+        TransactionService $transactionService
     ) {
-        parent::__construct($jsonResponse);
-        $this->transactionRepository = $transactionRepository;
+        parent::__construct($jsonResponse, $requestValidator, $logger);
+        $this->transactionService = $transactionService;
     }
 }
