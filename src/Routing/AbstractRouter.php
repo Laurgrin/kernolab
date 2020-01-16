@@ -6,6 +6,7 @@ use Kernolab\Controller\JsonResponse;
 use Kernolab\Service\DependencyInjectionContainer;
 use Kernolab\Service\RequestSanitizer;
 use Kernolab\Service\ResponseHandler;
+use Kernolab\Service\Logger;
 
 /**
  * Class AbstractRouter
@@ -42,23 +43,31 @@ abstract class AbstractRouter implements RouterInterface
     protected $responseHandler;
     
     /**
+     * @var \Kernolab\Service\Logger
+     */
+    protected $logger;
+    
+    /**
      * AbstractRouter constructor.
      *
      * @param JsonResponse                 $jsonResponse
      * @param DependencyInjectionContainer $container
      * @param RequestSanitizer             $requestSanitizer
      * @param ResponseHandler              $responseHandler
+     * @param \Kernolab\Service\Logger     $logger
      */
     public function __construct(
         JsonResponse $jsonResponse,
         DependencyInjectionContainer $container,
         RequestSanitizer $requestSanitizer,
-        ResponseHandler $responseHandler
+        ResponseHandler $responseHandler,
+        Logger $logger
     ) {
         $this->jsonResponse     = $jsonResponse;
         $this->container        = $container;
         $this->requestSanitizer = $requestSanitizer;
-        $this->responseHandler = $responseHandler;
+        $this->responseHandler  = $responseHandler;
+        $this->logger           = $logger;
         $this->routes           = json_decode(
             file_get_contents(ROUTE_PATH),
             true,

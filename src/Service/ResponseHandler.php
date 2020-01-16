@@ -7,6 +7,15 @@ use Kernolab\Controller\JsonResponse;
 class ResponseHandler
 {
     /**
+     * ResponseHandler constructor. Sets the response header.
+     */
+    public function __construct()
+    {
+        header('Content-Type: application/json');
+        header('Encoding: utf-8');
+    }
+    
+    /**
      * Echoes out the response. If we get a JSON exception somehow, we return a hard coded json response instead,
      * because the normal way we return any JSON response just threw an exception.
      *
