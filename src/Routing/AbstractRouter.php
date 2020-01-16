@@ -3,7 +3,7 @@
 namespace Kernolab\Routing;
 
 use Kernolab\Controller\JsonResponse;
-use Kernolab\Service\DependencyInjectionContainer;
+use Kernolab\Service\Container;
 use Kernolab\Service\RequestSanitizer;
 use Kernolab\Service\ResponseHandler;
 use Kernolab\Service\Logger;
@@ -28,7 +28,7 @@ abstract class AbstractRouter implements RouterInterface
     protected $routes;
     
     /**
-     * @var DependencyInjectionContainer
+     * @var Container
      */
     protected $container;
     
@@ -50,15 +50,15 @@ abstract class AbstractRouter implements RouterInterface
     /**
      * AbstractRouter constructor.
      *
-     * @param JsonResponse                 $jsonResponse
-     * @param DependencyInjectionContainer $container
-     * @param RequestSanitizer             $requestSanitizer
-     * @param ResponseHandler              $responseHandler
-     * @param \Kernolab\Service\Logger     $logger
+     * @param JsonResponse             $jsonResponse
+     * @param Container                $container
+     * @param RequestSanitizer         $requestSanitizer
+     * @param ResponseHandler          $responseHandler
+     * @param \Kernolab\Service\Logger $logger
      */
     public function __construct(
         JsonResponse $jsonResponse,
-        DependencyInjectionContainer $container,
+        Container $container,
         RequestSanitizer $requestSanitizer,
         ResponseHandler $responseHandler,
         Logger $logger

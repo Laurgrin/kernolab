@@ -1,0 +1,7 @@
+{
+  "Kernolab\\Model\\Entity\\Transaction\\TransactionRepositoryInterface": "Kernolab\\Model\\Entity\\Transaction\\TransactionRepository",
+  "Kernolab\\Model\\DataSource\\DataSourceInterface": "Kernolab\\Model\\DataSource\\MySql\\DataSource",
+  "Kernolab\\Model\\DataSource\\QueryGeneratorInterface": "\\Kernolab\\Model\\DataSource\\MySql\\QueryGenerator",
+  "Kernolab\\Model\\Entity\\EntityParserInterface": "Kernolab\\Model\\Entity\\EntityParser",
+  "Kernolab\\Model\\Entity\\Transaction\\TransactionProviderRuleInterface": "Kernolab\\Model\\Entity\\Transaction\\TransactionProviderRule"
+}

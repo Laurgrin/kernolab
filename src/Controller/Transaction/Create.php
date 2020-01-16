@@ -31,7 +31,7 @@ class Create extends AbstractTransactionController
         }
         
         try {
-            $userId = $params['user_id'];
+            $userId = (int)$params['user_id'];
             
             if ($this->getTransactionCount($userId) < 10) {
                 if ($this->canTransfer($userId)) {

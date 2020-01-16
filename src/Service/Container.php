@@ -7,12 +7,27 @@ use Kernolab\Exception\ContainerException;
 use ReflectionClass;
 use ReflectionException;
 
-class DependencyInjectionContainer
+class Container
 {
     /**
      * @var array
      */
     protected $instances = [];
+    
+    /**
+     * @var array
+     */
+    protected $implementations;
+    
+    public function __construct()
+    {
+        $this->implementations = json_decode(
+            file_get_contents(DI_PATH),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+    }
     
     /**
      * Sets the implementation for an abstract.
@@ -37,10 +52,10 @@ class DependencyInjectionContainer
      * @return mixed|null|object
      * @throws ReflectionException
      * @throws \Kernolab\Exception\ContainerException
+     * @throws \JsonException
      */
     public function get($abstract, $parameters = [])
     {
-        // if we don't have it, just register it
         if (!isset($this->instances[$abstract])) {
             $this->set($abstract);
         }
@@ -57,16 +72,23 @@ class DependencyInjectionContainer
      * @return mixed|object
      * @throws ReflectionException
      * @throws ContainerException
+     * @throws \JsonException
      */
     public function resolve($concrete, $parameters)
     {
+        
+        
         if ($concrete instanceof Closure) {
             return $concrete($this, $parameters);
         }
         $reflector = new ReflectionClass($concrete);
         
         if (!$reflector->isInstantiable()) {
-            throw new ContainerException(sprintf('Class %s is not instantiable', $concrete));
+            if (array_key_exists($concrete, $this->implementations)) {
+                $reflector = new ReflectionClass($this->implementations[$reflector->getName()]);
+            } else {
+                throw new ContainerException(sprintf('Class %s is not instantiable', $concrete));
+            }
         }
         
         $constructor = $reflector->getConstructor();
@@ -86,8 +108,9 @@ class DependencyInjectionContainer
      * @param \ReflectionParameter[] $parameters
      *
      * @return array
-     * @throws ReflectionException
-     * @throws ContainerException
+     * @throws \JsonException
+     * @throws \Kernolab\Exception\ContainerException
+     * @throws \ReflectionException
      */
     public function getDependencies($parameters): array
     {
