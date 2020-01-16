@@ -3,3 +3,4 @@
 /vendor/
 Test/Unit/xdebug-filter.php
 Test/Unit/coverage-report/
+*.log
