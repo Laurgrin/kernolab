@@ -4,8 +4,10 @@ namespace Kernolab\Service;
 
 use Kernolab\Controller\JsonResponse;
 use Kernolab\Exception\DateTimeException;
+use Kernolab\Exception\EntityNotFoundException;
 use Kernolab\Exception\HourlyTransactionException;
 use Kernolab\Exception\LifetimeTransactionAmountException;
+use Kernolab\Exception\MySqlConnectionException;
 use Kernolab\Exception\MySqlPreparedStatementException;
 use Kernolab\Exception\RequestParameterException;
 use Kernolab\Exception\TransactionConfirmationException;
@@ -127,5 +129,28 @@ class TransactionControllerExceptionHandler
         JsonResponse $jsonResponse
     ): void {
         $jsonResponse->addError(403, $exception->getMessage());
+    }
+    
+    /**
+     * Handles the EntityNotFoundException
+     *
+     * @param \Kernolab\Exception\EntityNotFoundException $exception
+     * @param \Kernolab\Controller\JsonResponse           $jsonResponse
+     */
+    public function handleEntityNotFoundException(EntityNotFoundException $exception, JsonResponse $jsonResponse): void
+    {
+        $jsonResponse->addError(404, $exception->getMessage());
+    }
+    
+    /**
+     * Handles the MySqlConnectionException
+     *
+     * @param \Kernolab\Exception\MySqlConnectionException $exception
+     * @param \Kernolab\Controller\JsonResponse            $jsonResponse
+     */
+    public function handleMySqlConnectionException(MySqlConnectionException $exception, JsonResponse $jsonResponse): void
+    {
+        $jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
+        $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
     }
 }

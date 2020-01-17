@@ -39,6 +39,7 @@ class TransactionService
      * @throws \Kernolab\Exception\DateTimeException
      * @throws \Kernolab\Exception\HourlyTransactionException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function checkUserTransactionCount(int $userId): TransactionService
     {
@@ -78,6 +79,7 @@ class TransactionService
      * @return TransactionService
      * @throws \Kernolab\Exception\LifetimeTransactionAmountException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function checkUserLifetimeTransactionAmount(int $userId): TransactionService
     {
@@ -107,6 +109,7 @@ class TransactionService
      * @return TransactionService
      * @throws \Kernolab\Exception\DateTimeException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function setTransactionFee(int $userId, array &$requestParams): TransactionService
     {
@@ -155,6 +158,7 @@ class TransactionService
      * @return \Kernolab\Model\Entity\EntityInterface
      * @throws \Kernolab\Exception\TransactionCreationException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function createTransaction(array $requestParams): EntityInterface
     {
@@ -172,15 +176,30 @@ class TransactionService
      * @return \Kernolab\Model\Entity\Transaction\Transaction
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\TransactionConfirmationException
+     * @throws \Kernolab\Exception\EntityNotFoundException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function confirmTransaction(int $entityId, int $verificationCode): Transaction
     {
         if ($verificationCode !== 111) {
             throw new TransactionConfirmationException(
-                '2FA verification failed while attempting to confirm the transaction'
+                '2FA verification failed while attempting to confirm the transaction.'
             );
         }
         
         return $this->transactionRepository->confirmTransaction($entityId);
+    }
+    
+    /**
+     * @param int $entityId
+     *
+     * @return \Kernolab\Model\Entity\Transaction\Transaction
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\EntityNotFoundException
+     * @throws \Kernolab\Exception\MySqlConnectionException
+     */
+    public function getTransactionByEntityId(int $entityId): Transaction
+    {
+        return $this->transactionRepository->getTransactionByEntityId($entityId);
     }
 }

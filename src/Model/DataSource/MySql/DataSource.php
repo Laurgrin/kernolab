@@ -35,51 +35,67 @@ class DataSource implements DataSourceInterface
      *
      * @param EntityParserInterface   $entityParser
      *
-     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function __construct(QueryGeneratorInterface $queryGenerator, EntityParserInterface $entityParser)
     {
-        $credentials          = json_decode(
-                                    file_get_contents(ENV_PATH),
-                                    true,
-                                    512,
-                                    JSON_THROW_ON_ERROR
-                                )['db'];
         $this->queryGenerator = $queryGenerator;
         $this->entityParser   = $entityParser;
-        $this->setConnection($credentials);
     }
     
     public function __destruct()
     {
-        $this->connection->close();
+        if ($this->connection) {
+            $this->connection->close();
+        }
     }
     
     /**
-     * Connects to the database and sets the connection handle
+     * Returns database credentials.
+     *
+     * @return array
+     */
+    protected function getConnectionCredentials(): array
+    {
+        return json_decode(
+                   file_get_contents(ENV_PATH),
+                   true,
+                   512,
+                   JSON_THROW_ON_ERROR
+               )['db'];
+    }
+    
+    /**
+     * Gets the connection handle to the database. Throws an error otherwise.
      *
      * @param array $credentials
      *
-     * @throws \Kernolab\Exception\MySqlConnectionException
+     * @return \mysqli
+     * @throws MySqlConnectionException
      */
-    protected function setConnection(array $credentials): void
+    protected function getConnection(): mysqli
     {
-        $connection = mysqli_connect(
-            $credentials['host'],
-            $credentials['user'],
-            $credentials['password'],
-            $credentials['database']
-        );
-        
-        if (!$connection) {
-            $errorNumber  = mysqli_connect_errno();
-            $errorMessage = mysqli_connect_error();
-            throw new MySqlConnectionException(
-                sprintf('Unable to connect to the database. Error %s: %s', $errorNumber, $errorMessage)
+        if (!$this->connection) {
+            $credentials = $this->getConnectionCredentials();
+    
+            $connection = mysqli_connect(
+                $credentials['host'],
+                $credentials['user'],
+                $credentials['password'],
+                $credentials['database']
             );
+    
+            if (!$connection) {
+                $errorNumber  = mysqli_connect_errno();
+                $errorMessage = mysqli_connect_error();
+                throw new MySqlConnectionException(
+                    sprintf('Unable to connect to the database. Error %s: %s', $errorNumber, $errorMessage)
+                );
+            }
+            
+            $this->connection = $connection;
         }
         
-        $this->connection = $connection;
+        return $this->connection;
     }
     
     /**
@@ -89,13 +105,15 @@ class DataSource implements DataSourceInterface
      *
      * @return mysqli_stmt
      * @throws MySqlPreparedStatementException
+     * @throws MySqlConnectionException
      */
     protected function prepare($query): mysqli_stmt
     {
-        $statement = $this->connection->prepare($query);
+        $connection = $this->getConnection();
+        $statement = $connection->prepare($query);
         
         if (!$statement) {
-            $this->throwException($this->connection, 'An error occurred while preparing the statement: ');
+            $this->throwException($connection, 'An error occurred while preparing the statement: ');
         }
         
         return $statement;
@@ -197,6 +215,7 @@ class DataSource implements DataSourceInterface
      *
      * @return array
      * @throws MySqlPreparedStatementException
+     * @throws MySqlConnectionException
      */
     public function get(array $criteria = [], string $table = ''): array
     {
@@ -217,9 +236,12 @@ class DataSource implements DataSourceInterface
      *
      * @return EntityInterface
      * @throws MySqlPreparedStatementException
+     * @throws MySqlConnectionException
      */
     public function set(EntityInterface $entity): EntityInterface
     {
+        $connection = $this->getConnection();
+        
         /* We only want to prepare the statement once, and then bind and execute it with different values. */
         $entityProperties = $this->entityParser->getEntityProperties($entity);
         $columns          = array_keys($entityProperties);
@@ -232,7 +254,7 @@ class DataSource implements DataSourceInterface
         
         $statement = $this->bindParams($statement, array_values($entityProperties));
         $this->executeStatement($statement);
-        $entity->setEntityId($this->connection->insert_id);
+        $entity->setEntityId($connection->insert_id);
         
         return $entity;
     }

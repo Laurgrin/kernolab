@@ -3,6 +3,8 @@
 namespace Kernolab\Controller\Transaction;
 
 use Kernolab\Controller\JsonResponse;
+use Kernolab\Exception\EntityNotFoundException;
+use Kernolab\Exception\MySqlConnectionException;
 use Kernolab\Exception\MySqlPreparedStatementException;
 use Kernolab\Exception\RequestParameterException;
 use Kernolab\Exception\TransactionConfirmationException;
@@ -22,8 +24,8 @@ class Confirm extends AbstractTransactionController
     {
         try {
             $this->requestValidator->validateRequest($requestParams, self::REQUIRED_PARAMS);
-            $entityId         = $requestParams['entity_id'];
-            $verificationCode = $requestParams['verification_code'];
+            $entityId         = (int)$requestParams['entity_id'];
+            $verificationCode = (int)$requestParams['verification_code'];
             $transaction      = $this->transactionService->confirmTransaction($entityId, $verificationCode);
             
             $this->jsonResponse->addField('status', 'success')
@@ -38,6 +40,12 @@ class Confirm extends AbstractTransactionController
             $this->controllerExceptionHandler->handleMySqlPreparedStatementException($e, $this->jsonResponse);
         } catch (TransactionConfirmationException $e) {
             $this->controllerExceptionHandler->handleTransactionConfirmationException($e, $this->jsonResponse);
+        } catch (\TypeError $e) {
+            $this->controllerExceptionHandler->handleTypeError($e, $this->jsonResponse);
+        } catch (EntityNotFoundException $e) {
+            $this->controllerExceptionHandler->handleEntityNotFoundException($e, $this->jsonResponse);
+        } catch (MySqlConnectionException $e) {
+            $this->controllerExceptionHandler->handleMySqlConnectionException($e, $this->jsonResponse);
         } finally {
             return $this->jsonResponse;
         }

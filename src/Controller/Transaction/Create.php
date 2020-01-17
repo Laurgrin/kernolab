@@ -6,6 +6,7 @@ use Kernolab\Controller\JsonResponse;
 use Kernolab\Exception\DateTimeException;
 use Kernolab\Exception\HourlyTransactionException;
 use Kernolab\Exception\LifetimeTransactionAmountException;
+use Kernolab\Exception\MySqlConnectionException;
 use Kernolab\Exception\MySqlPreparedStatementException;
 use Kernolab\Exception\RequestParameterException;
 use Kernolab\Exception\TransactionCreationException;
@@ -58,6 +59,8 @@ class Create extends AbstractTransactionController
             $this->controllerExceptionHandler->handleMySqlPreparedStatementException($e, $this->jsonResponse);
         } catch (\TypeError $e) {
             $this->controllerExceptionHandler->handleTypeError($e, $this->jsonResponse);
+        } catch (MySqlConnectionException $e) {
+            $this->controllerExceptionHandler->handleMySqlConnectionException($e, $this->jsonResponse);
         } finally {
             return $this->jsonResponse;
         }

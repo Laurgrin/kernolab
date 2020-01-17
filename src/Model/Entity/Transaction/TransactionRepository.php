@@ -2,6 +2,8 @@
 
 namespace Kernolab\Model\Entity\Transaction;
 
+use Kernolab\Exception\EntityNotFoundException;
+use Kernolab\Exception\TransactionConfirmationException;
 use Kernolab\Exception\TransactionCreationException;
 use Kernolab\Model\DataSource\Criteria;
 use Kernolab\Model\DataSource\DataSourceInterface;
@@ -46,6 +48,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      * @return \Kernolab\Model\Entity\Transaction\Transaction
      * @throws \Kernolab\Exception\TransactionCreationException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function createTransaction(array $params): ?EntityInterface
     {
@@ -67,6 +70,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      *
      * @return \Kernolab\Model\Entity\Transaction\Transaction[]
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function getTransactionsByUserId(int $userId): array
     {
@@ -87,17 +91,29 @@ class TransactionRepository implements TransactionRepositoryInterface
      *
      * @return \Kernolab\Model\Entity\Transaction\Transaction
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\EntityNotFoundException
+     * @throws \Kernolab\Exception\TransactionConfirmationException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function confirmTransaction(int $entityId): EntityInterface
     {
         $transaction = $this->getTransactionByEntityId($entityId);
-        if ($transaction && $transaction->getTransactionStatus() === 'created') {
+        if ($transaction && $transaction->getTransactionStatus() === self::STATUS_CREATED) {
             $transaction->setTransactionStatus(self::STATUS_CONFIRMED);
             
             return $this->dataSource->set($transaction);
         }
-        
-        return null;
+    
+        if ($transaction->getTransactionStatus() !== self::STATUS_CREATED) {
+            throw new TransactionConfirmationException(
+                sprintf(
+                    'Transaction cannot be confirmed because of invalid status: %s.',
+                    $transaction->getTransactionStatus()
+                )
+            );
+        }
+    
+        throw new EntityNotFoundException(Transaction::class, $entityId);
     }
     
     /**
@@ -107,14 +123,20 @@ class TransactionRepository implements TransactionRepositoryInterface
      *
      * @return \Kernolab\Model\Entity\Transaction\Transaction
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\EntityNotFoundException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function getTransactionByEntityId(int $entityId): ?EntityInterface
     {
-        $transaction = null;
-        $criteria    = new Criteria('entity_id', 'eq', $entityId);
-        $entityData  = $this->dataSource->get([$criteria], 'transaction');
+        $criteria   = new Criteria('entity_id', 'eq', $entityId);
+        $entityData = $this->dataSource->get([$criteria], self::ENTITY_TABLE);
         
-        return $this->createTransactionObject($entityData);
+        $transaction = $this->createTransactionObject(reset($entityData));
+        if ($transaction === null) {
+            throw new EntityNotFoundException(Transaction::class, $entityId);
+        }
+        
+        return $transaction;
     }
     
     /**
@@ -124,6 +146,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      *
      * @return \Kernolab\Model\Entity\Transaction\Transaction[]
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     public function processTransactions(int $limit = 0): array
     {
@@ -161,17 +184,25 @@ class TransactionRepository implements TransactionRepositoryInterface
         if (!empty($data)) {
             $transaction = new Transaction();
             $transaction->setEntityId(array_key_exists('entity_id', $data) ? (int)$data['entity_id'] : 0)
-                        ->setUserId((int)$data['user_id'])
-                        ->setTransactionStatus($data['transaction_status'])
-                        ->setTransactionFee((float)$data['transaction_fee'])
+                        ->setUserId(array_key_exists('user_id', $data) ? (int)$data['user_id'] : 0)
+                        ->setTransactionStatus(array_key_exists('transaction_status', $data) ?
+                                                   $data['transaction_status'] : ''
+                        )
+                        ->setTransactionFee(array_key_exists('transaction_fee', $data) ?
+                                                (float)$data['transaction_fee'] : 0
+                        )
                         ->setCreatedAt($data['created_at'] ?? '')
                         ->setUpdatedAt($data['updated_at'] ?? '')
-                        ->setTransactionProvider($data['transaction_provider'])
-                        ->setTransactionAmount((float)$data['transaction_amount'])
-                        ->setTransactionRecipientId((int)$data['transaction_recipient_id'])
-                        ->setTransactionRecipientName($data['transaction_recipient_name'])
-                        ->setTransactionCurrency($data['transaction_currency'])
-                        ->setTransactionDetails($data['transaction_details']);
+                        ->setTransactionProvider($data['transaction_provider'] ?? '')
+                        ->setTransactionAmount(array_key_exists('transaction_amount', $data) ?
+                                                   (float)$data['transaction_amount'] : 0
+                        )
+                        ->setTransactionRecipientId(array_key_exists('transaction_recipient_id', $data) ?
+                                                        (int)$data['transaction_recipient_id'] : 0
+                        )
+                        ->setTransactionRecipientName($data['transaction_recipient_name'] ?? '')
+                        ->setTransactionCurrency($data['transaction_currency'] ?? '')
+                        ->setTransactionDetails($data['transaction_details'] ?? '');
         }
         
         return $transaction;

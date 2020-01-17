@@ -40,6 +40,7 @@ interface TransactionRepositoryInterface
      * @param int $entityId
      *
      * @return EntityInterface
+     * @throws \Kernolab\Exception\EntityNotFoundException
      */
     public function getTransactionByEntityId(int $entityId): ?EntityInterface;
     

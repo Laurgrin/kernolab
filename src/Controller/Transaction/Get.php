@@ -3,9 +3,15 @@
 namespace Kernolab\Controller\Transaction;
 
 use Kernolab\Controller\JsonResponse;
+use Kernolab\Exception\EntityNotFoundException;
+use Kernolab\Exception\MySqlConnectionException;
+use Kernolab\Exception\MySqlPreparedStatementException;
+use Kernolab\Exception\RequestParameterException;
 
 class Get extends AbstractTransactionController
 {
+    protected const REQUIRED_PARAMS = ['entity_id'];
+    
     /**
      * Process a request and return a response
      *
@@ -15,30 +21,34 @@ class Get extends AbstractTransactionController
      */
     public function execute(array $requestParams): JsonResponse
     {
-        $requiredParams = ['entity_id'];
-        if (!$this->validateParams($requestParams, $requiredParams)) {
+        try {
+            $this->requestValidator->validateRequest($requestParams, self::REQUIRED_PARAMS);
+            $transaction = $this->transactionService->getTransactionByEntityId((int)$requestParams['entity_id']);
+            
+            $this->jsonResponse->addField('entity_id', $transaction->getEntityId())
+                               ->addField('user_id', $transaction->getUserId())
+                               ->addField('transaction_status', $transaction->getTransactionStatus())
+                               ->addField('transaction_fee', $transaction->getTransactionFee())
+                               ->addField('created_at', $transaction->getCreatedAt())
+                               ->addField('updated_at', $transaction->getUpdatedAt())
+                               ->addField('transaction_provider', $transaction->getTransactionProvider())
+                               ->addField('transaction_amount', $transaction->getTransactionAmount())
+                               ->addField('transaction_recipient_id', $transaction->getTransactionRecipientId())
+                               ->addField('transaction_recipient_name', $transaction->getTransactionRecipientName())
+                               ->addField('transaction_currency', $transaction->getTransactionCurrency())
+                               ->addField('transaction_details', $transaction->getTransactionDetails());
+        } catch (RequestParameterException $e) {
+            $this->controllerExceptionHandler->handleRequestParameterException($e, $this->jsonResponse);
+        } catch (MySqlPreparedStatementException $e) {
+            $this->controllerExceptionHandler->handleMySqlPreparedStatementException($e, $this->jsonResponse);
+        } catch (EntityNotFoundException $e) {
+            $this->controllerExceptionHandler->handleEntityNotFoundException($e, $this->jsonResponse);
+        } catch (MySqlConnectionException $e) {
+            $this->controllerExceptionHandler->handleMySqlConnectionException($e, $this->jsonResponse);
+        } catch (\TypeError $e) {
+            $this->controllerExceptionHandler->handleTypeError($e, $this->jsonResponse);
+        } finally {
             return $this->jsonResponse;
         }
-        
-        $entity = $this->transactionService->getTransactionByEntityId($requestParams['entity_id']);
-        if ($entity) {
-            return $this->jsonResponse->addField('entity_id', $entity->getEntityId())
-                                      ->addField('user_id', $entity->getUserId())
-                                      ->addField('transaction_status', $entity->getTransactionStatus())
-                                      ->addField('transaction_fee', $entity->getTransactionFee())
-                                      ->addField('created_at', $entity->getCreatedAt())
-                                      ->addField('updated_at', $entity->getUpdatedAt())
-                                      ->addField('transaction_provider', $entity->getTransactionProvider())
-                                      ->addField('transaction_amount', $entity->getTransactionAmount())
-                                      ->addField('transaction_recipient_id', $entity->getTransactionRecipientId())
-                                      ->addField('transaction_recipient_name', $entity->getTransactionRecipientName())
-                                      ->addField('transaction_currency', $entity->getTransactionCurrency())
-                                      ->addField('transaction_details', $entity->getTransactionDetails());
-        }
-        
-        return $this->jsonResponse->addError(
-            404,
-            sprintf('Transaction with the id %s not found', $requestParams['entity_id'])
-        );
     }
 }
