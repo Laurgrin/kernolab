@@ -5,7 +5,9 @@ namespace Kernolab\Service;
 use Kernolab\Exception\DateTimeException;
 use Kernolab\Exception\HourlyTransactionException;
 use Kernolab\Exception\LifetimeTransactionAmountException;
+use Kernolab\Exception\TransactionConfirmationException;
 use Kernolab\Model\Entity\EntityInterface;
+use Kernolab\Model\Entity\Transaction\Transaction;
 use Kernolab\Model\Entity\Transaction\TransactionRepositoryInterface;
 
 class TransactionService
@@ -159,5 +161,26 @@ class TransactionService
         $requestParams['transaction_status'] = 'created';
         
         return $this->transactionRepository->createTransaction($requestParams);
+    }
+    
+    /**
+     * Confirms a transaction by it's entity ID. Throws an error if 2FA code does not match.
+     *
+     * @param int $entityId
+     * @param int $verificationCode
+     *
+     * @return \Kernolab\Model\Entity\Transaction\Transaction
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     * @throws \Kernolab\Exception\TransactionConfirmationException
+     */
+    public function confirmTransaction(int $entityId, int $verificationCode): Transaction
+    {
+        if ($verificationCode !== 111) {
+            throw new TransactionConfirmationException(
+                '2FA verification failed while attempting to confirm the transaction'
+            );
+        }
+        
+        return $this->transactionRepository->confirmTransaction($entityId);
     }
 }

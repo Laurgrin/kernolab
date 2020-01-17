@@ -88,11 +88,11 @@ class TransactionRepository implements TransactionRepositoryInterface
      * @return \Kernolab\Model\Entity\Transaction\Transaction
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      */
-    public function confirmTransaction(int $entityId): ?EntityInterface
+    public function confirmTransaction(int $entityId): EntityInterface
     {
         $transaction = $this->getTransactionByEntityId($entityId);
         if ($transaction && $transaction->getTransactionStatus() === 'created') {
-            $transaction->setTransactionStatus("confirmed");
+            $transaction->setTransactionStatus(self::STATUS_CONFIRMED);
             
             return $this->dataSource->set($transaction);
         }
@@ -127,7 +127,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      */
     public function processTransactions(int $limit = 0): array
     {
-        $criteria[]          = new Criteria('transaction_status', 'eq', 'confirmed');
+        $criteria[]          = new Criteria('transaction_status', 'eq', self::STATUS_CONFIRMED);
         $entityData          = $this->dataSource->get($criteria, 'transaction');
         $count               = 0;
         $updatedTransactions = [];
@@ -140,7 +140,7 @@ class TransactionRepository implements TransactionRepositoryInterface
             
             $transaction = new Transaction();
             $transaction->setEntityId($entity['entity_id'])
-                        ->setTransactionStatus('processed');
+                        ->setTransactionStatus(self::STATUS_PROCESSED);
             $updatedTransactions[] = $this->dataSource->set($transaction);
         }
         

@@ -50,6 +50,11 @@ class DataSource implements DataSourceInterface
         $this->setConnection($credentials);
     }
     
+    public function __destruct()
+    {
+        $this->connection->close();
+    }
+    
     /**
      * Connects to the database and sets the connection handle
      *

@@ -19,21 +19,15 @@ abstract class AbstractController implements ControllerInterface
     protected $requestValidator;
     
     /**
-     * @var \Kernolab\Service\Logger
-     */
-    protected $logger;
-    
-    /**
      * AbstractController constructor.
      *
      * @param \Kernolab\Controller\JsonResponse  $jsonResponse
      * @param \Kernolab\Service\RequestValidator $requestValidator
      * @param \Kernolab\Service\Logger           $logger
      */
-    public function __construct(JsonResponse $jsonResponse, RequestValidator $requestValidator, Logger $logger)
+    public function __construct(JsonResponse $jsonResponse, RequestValidator $requestValidator)
     {
         $this->jsonResponse     = $jsonResponse;
         $this->requestValidator = $requestValidator;
-        $this->logger = $logger;
     }
 }

@@ -45,25 +45,19 @@ class Create extends AbstractTransactionController
                                ->addField('message', 'Transaction created successfully.')
                                ->addField('entity_id', $transaction->getEntityId());
         } catch (RequestParameterException $e) {
-            foreach ($e->getMissingKeys() as $missingKey) {
-                $this->jsonResponse->addError(400, sprintf('Missing required key %s', $missingKey));
-            }
+            $this->controllerExceptionHandler->handleRequestParameterException($e, $this->jsonResponse);
         } catch (DateTimeException $e) {
-            $this->jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
-            $this->logger->log(Logger::SEVERITY_ERROR, $e->getMessage());
+            $this->controllerExceptionHandler->handleDateTimeException($e, $this->jsonResponse);
         } catch (HourlyTransactionException $e) {
-            $this->jsonResponse->addError(403, $e->getMessage());
+            $this->controllerExceptionHandler->handleHourlyTransactionException($e, $this->jsonResponse);
         } catch (LifetimeTransactionAmountException $e) {
-            $this->jsonResponse->addError(403, $e->getMessage());
+            $this->controllerExceptionHandler->handleLifetimeTransactionAmountException($e, $this->jsonResponse);
         } catch (TransactionCreationException $e) {
-            $this->jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
-            $this->logger->log(Logger::SEVERITY_ERROR, $e->getMessage());
+            $this->controllerExceptionHandler->handleTransactionCreationException($e, $this->jsonResponse);
         } catch (MySqlPreparedStatementException $e) {
-            $this->jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
-            $this->logger->log(Logger::SEVERITY_ERROR, $e->getMessage());
+            $this->controllerExceptionHandler->handleMySqlPreparedStatementException($e, $this->jsonResponse);
         } catch (\TypeError $e) {
-            $this->jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
-            $this->logger->log(Logger::SEVERITY_ERROR, $e->getMessage());
+            $this->controllerExceptionHandler->handleTypeError($e, $this->jsonResponse);
         } finally {
             return $this->jsonResponse;
         }

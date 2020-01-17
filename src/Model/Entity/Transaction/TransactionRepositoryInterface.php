@@ -32,7 +32,7 @@ interface TransactionRepositoryInterface
      *
      * @return EntityInterface
      */
-    public function confirmTransaction(int $entityId): ?EntityInterface;
+    public function confirmTransaction(int $entityId): EntityInterface;
     
     /**
      * Gets a specific transaction by transaction ID.
