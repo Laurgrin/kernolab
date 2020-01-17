@@ -3,6 +3,7 @@
 namespace Kernolab\Controller\Transaction;
 
 use Kernolab\Controller\JsonResponse;
+use Kernolab\Exception\ConfigurationFileNotFoundException;
 use Kernolab\Exception\DateTimeException;
 use Kernolab\Exception\HourlyTransactionException;
 use Kernolab\Exception\LifetimeTransactionAmountException;
@@ -61,6 +62,8 @@ class Create extends AbstractTransactionController
             $this->controllerExceptionHandler->handleTypeError($e, $this->jsonResponse);
         } catch (MySqlConnectionException $e) {
             $this->controllerExceptionHandler->handleMySqlConnectionException($e, $this->jsonResponse);
+        } catch (ConfigurationFileNotFoundException $e) {
+            $this->controllerExceptionHandler->handleConfigurationFileNotFoundException($e, $this->jsonResponse);
         } finally {
             return $this->jsonResponse;
         }

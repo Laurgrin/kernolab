@@ -49,6 +49,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      * @throws \Kernolab\Exception\TransactionCreationException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function createTransaction(array $params): ?EntityInterface
     {
@@ -71,6 +72,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      * @return \Kernolab\Model\Entity\Transaction\Transaction[]
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function getTransactionsByUserId(int $userId): array
     {
@@ -94,6 +96,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      * @throws \Kernolab\Exception\EntityNotFoundException
      * @throws \Kernolab\Exception\TransactionConfirmationException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function confirmTransaction(int $entityId): EntityInterface
     {
@@ -125,6 +128,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\EntityNotFoundException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function getTransactionByEntityId(int $entityId): ?EntityInterface
     {
@@ -147,6 +151,7 @@ class TransactionRepository implements TransactionRepositoryInterface
      * @return \Kernolab\Model\Entity\Transaction\Transaction[]
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function processTransactions(int $limit = 0): array
     {

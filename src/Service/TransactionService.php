@@ -40,6 +40,7 @@ class TransactionService
      * @throws \Kernolab\Exception\HourlyTransactionException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function checkUserTransactionCount(int $userId): TransactionService
     {
@@ -80,6 +81,7 @@ class TransactionService
      * @throws \Kernolab\Exception\LifetimeTransactionAmountException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function checkUserLifetimeTransactionAmount(int $userId): TransactionService
     {
@@ -110,6 +112,7 @@ class TransactionService
      * @throws \Kernolab\Exception\DateTimeException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function setTransactionFee(int $userId, array &$requestParams): TransactionService
     {
@@ -159,6 +162,7 @@ class TransactionService
      * @throws \Kernolab\Exception\TransactionCreationException
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function createTransaction(array $requestParams): EntityInterface
     {
@@ -178,6 +182,7 @@ class TransactionService
      * @throws \Kernolab\Exception\TransactionConfirmationException
      * @throws \Kernolab\Exception\EntityNotFoundException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function confirmTransaction(int $entityId, int $verificationCode): Transaction
     {
@@ -197,6 +202,7 @@ class TransactionService
      * @throws \Kernolab\Exception\MySqlPreparedStatementException
      * @throws \Kernolab\Exception\EntityNotFoundException
      * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function getTransactionByEntityId(int $entityId): Transaction
     {
