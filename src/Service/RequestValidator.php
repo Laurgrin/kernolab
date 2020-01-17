@@ -13,19 +13,18 @@ class RequestValidator
      *
      * @param array $requiredKeys
      *
-     * @return bool
+     * @return void
      * @throws \Kernolab\Exception\RequestParameterException
      */
-    public function validateRequest(array $params, array $requiredKeys): bool
+    public function validateRequest(array $params, array $requiredKeys): void
     {
         $requestKeys = array_keys($params);
-        if (array_intersect($requestKeys, $requiredKeys) === $requiredKeys) {
-            return true;
+        $diff        = array_diff($requestKeys, $requiredKeys);
+        if (!empty($diff)) {
+            throw new RequestParameterException(
+                'The request has missing parameters',
+                $diff
+            );
         }
-    
-        throw new RequestParameterException(
-            'The request has missing parameters',
-            array_diff($requiredKeys, $requestKeys)
-        );
     }
 }

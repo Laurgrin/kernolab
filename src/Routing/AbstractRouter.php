@@ -4,9 +4,10 @@ namespace Kernolab\Routing;
 
 use Kernolab\Controller\JsonResponse;
 use Kernolab\Service\Container;
+use Kernolab\Service\ExceptionHandler;
 use Kernolab\Service\RequestSanitizer;
 use Kernolab\Service\ResponseHandler;
-use Kernolab\Service\Logger;
+use Kernolab\Service\RouteResolver;
 
 /**
  * Class AbstractRouter
@@ -43,36 +44,38 @@ abstract class AbstractRouter implements RouterInterface
     protected $responseHandler;
     
     /**
-     * @var \Kernolab\Service\Logger
+     * @var \Kernolab\Service\ExceptionHandler
      */
-    protected $logger;
+    protected $exceptionHandler;
+    
+    /**
+     * @var \Kernolab\Service\RouteResolver
+     */
+    protected $routeResolver;
     
     /**
      * AbstractRouter constructor.
      *
-     * @param JsonResponse             $jsonResponse
-     * @param Container                $container
-     * @param RequestSanitizer         $requestSanitizer
-     * @param ResponseHandler          $responseHandler
-     * @param \Kernolab\Service\Logger $logger
+     * @param JsonResponse                       $jsonResponse
+     * @param Container                          $container
+     * @param RequestSanitizer                   $requestSanitizer
+     * @param ResponseHandler                    $responseHandler
+     * @param \Kernolab\Service\ExceptionHandler $exceptionHandler
+     * @param \Kernolab\Service\RouteResolver    $routeResolver
      */
     public function __construct(
         JsonResponse $jsonResponse,
         Container $container,
         RequestSanitizer $requestSanitizer,
         ResponseHandler $responseHandler,
-        Logger $logger
+        ExceptionHandler $exceptionHandler,
+        RouteResolver $routeResolver
     ) {
         $this->jsonResponse     = $jsonResponse;
         $this->container        = $container;
         $this->requestSanitizer = $requestSanitizer;
         $this->responseHandler  = $responseHandler;
-        $this->logger           = $logger;
-        $this->routes           = json_decode(
-            file_get_contents(ROUTE_PATH),
-            true,
-            512,
-            JSON_THROW_ON_ERROR
-        );
+        $this->exceptionHandler = $exceptionHandler;
+        $this->routeResolver = $routeResolver;
     }
 }

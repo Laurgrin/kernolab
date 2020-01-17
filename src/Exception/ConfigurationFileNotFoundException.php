@@ -3,11 +3,11 @@
 namespace Kernolab\Exception;
 
 /**
- * Class EnvFileNotFoundException
+ * Class ConfigurationFileNotFoundException
  * @package Kernolab\Exception
  * @codeCoverageIgnore
  */
-class EnvFileNotFoundException extends AbstractException
+class ConfigurationFileNotFoundException extends AbstractException
 {
 
 }

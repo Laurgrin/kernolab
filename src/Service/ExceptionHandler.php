@@ -2,7 +2,10 @@
 
 namespace Kernolab\Service;
 
+use JsonException;
 use Kernolab\Controller\JsonResponse;
+use Kernolab\Exception\ConfigurationFileNotFoundException;
+use Kernolab\Exception\ContainerException;
 use Kernolab\Exception\DateTimeException;
 use Kernolab\Exception\EntityNotFoundException;
 use Kernolab\Exception\HourlyTransactionException;
@@ -12,8 +15,10 @@ use Kernolab\Exception\MySqlPreparedStatementException;
 use Kernolab\Exception\RequestParameterException;
 use Kernolab\Exception\TransactionConfirmationException;
 use Kernolab\Exception\TransactionCreationException;
+use Kernolab\Exception\UndefinedRouteException;
+use ReflectionException;
 
-class TransactionControllerExceptionHandler
+class ExceptionHandler
 {
     /**
      * @var \Kernolab\Service\Logger
@@ -109,7 +114,7 @@ class TransactionControllerExceptionHandler
     /**
      * Handles the TypeError
      *
-     * @param \TypeError $error
+     * @param \TypeError                        $error
      * @param \Kernolab\Controller\JsonResponse $jsonResponse
      */
     public function handleTypeError(\TypeError $error, JsonResponse $jsonResponse): void
@@ -148,9 +153,72 @@ class TransactionControllerExceptionHandler
      * @param \Kernolab\Exception\MySqlConnectionException $exception
      * @param \Kernolab\Controller\JsonResponse            $jsonResponse
      */
-    public function handleMySqlConnectionException(MySqlConnectionException $exception, JsonResponse $jsonResponse): void
-    {
+    public function handleMySqlConnectionException(
+        MySqlConnectionException $exception,
+        JsonResponse $jsonResponse
+    ): void {
         $jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
         $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+    }
+    
+    /**
+     * Handles the ContainerException
+     *
+     * @param \Kernolab\Exception\ContainerException $exception
+     * @param \Kernolab\Controller\JsonResponse      $jsonResponse
+     */
+    public function handleContainerException(ContainerException $exception, JsonResponse $jsonResponse): void
+    {
+        $jsonResponse->addError(500, 'An internal error has been encountered.');
+        $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+    }
+    
+    /**
+     * Handles the ReflectionException
+     *
+     * @param \ReflectionException              $exception
+     * @param \Kernolab\Controller\JsonResponse $jsonResponse
+     */
+    public function handleReflectionException(ReflectionException $exception, JsonResponse $jsonResponse): void
+    {
+        $jsonResponse->addError(500, 'An internal error has been encountered.');
+        $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+    }
+    
+    /**
+     * Handles the JsonException. Yes, we are trying to return a json response if another fails.
+     *
+     * @param \JsonException                    $exception
+     * @param \Kernolab\Controller\JsonResponse $jsonResponse
+     */
+    public function handleJsonException(JsonException $exception, JsonResponse $jsonResponse): void
+    {
+        $jsonResponse->addError(500, 'An internal error has been encountered.');
+        $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+    }
+    
+    /**
+     * Handle the ConfigurationFileNotFoundException
+     *
+     * @param \Kernolab\Exception\ConfigurationFileNotFoundException $exception
+     * @param \Kernolab\Controller\JsonResponse                      $jsonResponse
+     */
+    public function handleConfigurationFileNotFoundException(
+        ConfigurationFileNotFoundException $exception,
+        JsonResponse $jsonResponse
+    ): void {
+        $jsonResponse->addError(500, 'An internal error has been encountered.');
+        $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+    }
+    
+    /**
+     * Handle the UndefinedRouteException
+     *
+     * @param \Kernolab\Exception\UndefinedRouteException $exception
+     * @param \Kernolab\Controller\JsonResponse           $jsonResponse
+     */
+    public function handleUndefinedRouteException(UndefinedRouteException $exception, JsonResponse $jsonResponse): void
+    {
+        $jsonResponse->addError(404, $exception->getMessage());
     }
 }

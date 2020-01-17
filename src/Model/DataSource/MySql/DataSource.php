@@ -2,6 +2,7 @@
 
 namespace Kernolab\Model\DataSource\MySql;
 
+use Kernolab\Exception\ConfigurationFileNotFoundException;
 use Kernolab\Exception\MySqlConnectionException;
 use Kernolab\Exception\MySqlPreparedStatementException;
 use Kernolab\Model\DataSource\QueryGeneratorInterface;
@@ -53,9 +54,14 @@ class DataSource implements DataSourceInterface
      * Returns database credentials.
      *
      * @return array
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     protected function getConnectionCredentials(): array
     {
+        if (!is_readable(ENV_PATH)) {
+            throw new ConfigurationFileNotFoundException(sprintf('File %s not found', ENV_PATH));
+        }
+        
         return json_decode(
                    file_get_contents(ENV_PATH),
                    true,
@@ -67,10 +73,9 @@ class DataSource implements DataSourceInterface
     /**
      * Gets the connection handle to the database. Throws an error otherwise.
      *
-     * @param array $credentials
-     *
      * @return \mysqli
-     * @throws MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
+     * @throws \Kernolab\Exception\MySqlConnectionException
      */
     protected function getConnection(): mysqli
     {
@@ -106,6 +111,7 @@ class DataSource implements DataSourceInterface
      * @return mysqli_stmt
      * @throws MySqlPreparedStatementException
      * @throws MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     protected function prepare($query): mysqli_stmt
     {
@@ -216,6 +222,7 @@ class DataSource implements DataSourceInterface
      * @return array
      * @throws MySqlPreparedStatementException
      * @throws MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function get(array $criteria = [], string $table = ''): array
     {
@@ -237,6 +244,7 @@ class DataSource implements DataSourceInterface
      * @return EntityInterface
      * @throws MySqlPreparedStatementException
      * @throws MySqlConnectionException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
      */
     public function set(EntityInterface $entity): EntityInterface
     {

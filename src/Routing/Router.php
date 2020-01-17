@@ -2,9 +2,9 @@
 
 namespace Kernolab\Routing;
 
+use Kernolab\Exception\ConfigurationFileNotFoundException;
 use Kernolab\Exception\ContainerException;
-use Kernolab\Routing\Request\Request;
-use Kernolab\Service\Logger;
+use Kernolab\Exception\UndefinedRouteException;
 use ReflectionException;
 
 class Router extends AbstractRouter
@@ -13,7 +13,6 @@ class Router extends AbstractRouter
      * Request the request to an appropriate handler (controller). Process the response.
      *
      * @param string $requestUri
-     *
      * @param string $requestMethod
      *
      * @return void
@@ -21,29 +20,19 @@ class Router extends AbstractRouter
     public function route(string $requestUri, string $requestMethod): void
     {
         try {
-            /** @var Request $request */
-            $request = $this->container->get(Request::class);
-            $request->setRequestUri(explode('?', $requestUri)[0]);
-            
-            if (array_key_exists($request->getRequestUri(), $this->routes)) {
-                $request->setRequestMethod($this->routes[$request->getRequestUri()]['method'])
-                        ->setController($this->routes[$request->getRequestUri()]['controller'])
-                        ->setRequestParams($this->requestSanitizer->sanitize($_REQUEST));
-                
-                if ($request->getRequestMethod() === $requestMethod) {
-                    /** @var \Kernolab\Controller\AbstractController $controller */
-                    $controller         = $this->container->get(self::CONTROLLER_NAMESPACE . $request->getController());
-                    $this->jsonResponse = $controller->execute($request->getRequestParams());
-                }
-            } else {
-                $this->jsonResponse->addError(404, sprintf('Endpoint %s not found', $requestUri));
-            }
+            $request = $this->routeResolver->resolve($requestUri, $requestMethod);
+            $controller         = $this->container->get(self::CONTROLLER_NAMESPACE . $request->getController());
+            $this->jsonResponse = $controller->execute($request->getRequestParams());
         } catch (ContainerException $e) {
-            $this->jsonResponse->addError(500, 'An internal error has been encountered.');
-            $this->logger->log(Logger::SEVERITY_ERROR, $e->getMessage());
+            $this->exceptionHandler->handleContainerException($e, $this->jsonResponse);
         } catch (ReflectionException $e) {
-            $this->jsonResponse->addError(500, 'An internal error has been encountered.');
-            $this->logger->log(Logger::SEVERITY_ERROR, $e->getMessage());
+            $this->exceptionHandler->handleReflectionException($e, $this->jsonResponse);
+        } catch (\JsonException $e) {
+            $this->exceptionHandler->handleJsonException($e, $this->jsonResponse);
+        } catch (ConfigurationFileNotFoundException $e) {
+            $this->exceptionHandler->handleConfigurationFileNotFoundException($e, $this->jsonResponse);
+        } catch (UndefinedRouteException $e) {
+            $this->exceptionHandler->handleUndefinedRouteException($e, $this->jsonResponse);
         } finally {
             $this->responseHandler->handleResponse($this->jsonResponse);
         }

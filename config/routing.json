@@ -1,14 +1,5 @@
 {
-  "/api/transaction/create": {
-    "method": "POST",
-    "controller": "Transaction\\Create"
-  },
-  "/api/transaction/confirm": {
-    "method": "POST",
-    "controller": "Transaction\\Confirm"
-  },
-  "/api/transaction/get": {
-    "method": "GET",
-    "controller": "Transaction\\Get"
-  }
+  "POST/api/transaction/": "Transaction\\Create",
+  "PUT/api/transaction/{id}": "Transaction\\Confirm",
+  "GET/api/transaction/{id}": "Transaction\\Get"
 }
