@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 namespace Test\Unit\Model\Entity\Transaction;
 
 use Kernolab\Model\Entity\Transaction\TransactionProviderRule;
@@ -13,20 +13,20 @@ class TransactionProviderRuleTest extends TestCase
     protected function setUp(): void
     {
         $this->providers           = [
-            "EUR"     => [
-                "name"  => "Megacash",
-                "rules" => [
-                    "field" => "transaction_details",
-                    "rule"  => "length",
-                    "value" => "20",
+            'EUR'     => [
+                'name'  => 'Megacash',
+                'rules' => [
+                    'field' => 'transaction_details',
+                    'rule'  => 'length',
+                    'value' => '20',
                 ],
             ],
-            "Default" => [
-                "name"  => "Megacash",
-                "rules" => [
-                    "field" => "transaction_details",
-                    "rule"  => "random_int",
-                    "value" => "50",
+            'Default' => [
+                'name'  => 'Megacash',
+                'rules' => [
+                    'field' => 'transaction_details',
+                    'rule'  => 'random_int',
+                    'value' => '50',
                 ],
             ],
         ];
@@ -46,24 +46,24 @@ class TransactionProviderRuleTest extends TestCase
      * @param $params
      * @param $expected
      */
-    public function testApplyProviderRulesMegacash($params, $expected)
+    public function testApplyProviderRulesMegacash($params, $expected): void
     {
         $actual = $this->transactionProvider->applyProviderRules($params);
         $this->assertEquals($expected, $actual);
     }
     
-    public function applyProviderRulesMegacashProvider()
+    public function applyProviderRulesMegacashProvider(): array
     {
         return [
             [
                 [
-                    "transaction_details"  => "20 characters here: this should not be seen",
-                    "transaction_currency" => "EUR",
+                    'transaction_details'  => '20 characters here: this should not be seen',
+                    'transaction_currency' => 'EUR',
                 ],
                 [
-                    "transaction_details"  => "20 characters here: ",
-                    "transaction_currency" => "EUR",
-                    "transaction_provider" => "Megacash",
+                    'transaction_details'  => '20 characters here: ',
+                    'transaction_currency' => 'EUR',
+                    'transaction_provider' => 'Megacash',
                 ],
             ],
         ];
@@ -76,25 +76,25 @@ class TransactionProviderRuleTest extends TestCase
      * @param $params
      * @param $expected
      */
-    public function testApplyProviderRulesSupermoney($params, $expected)
+    public function testApplyProviderRulesSupermoney($params, $expected): void
     {
         $actual = $this->transactionProvider->applyProviderRules($params);
-        $this->assertRegExp("/Details \d+/", $actual["transaction_details"]);
-        $this->assertEquals($expected["transaction_provider"], $actual["transaction_provider"]);
+        $this->assertRegExp("/Details \d+/", $actual['transaction_details']);
+        $this->assertEquals($expected['transaction_provider'], $actual['transaction_provider']);
     }
     
-    public function applyProviderRulesSupermoneyProvider()
+    public function applyProviderRulesSupermoneyProvider(): array
     {
         return [
             [
                 [
-                    "transaction_details"  => "Details ",
-                    "transaction_currency" => "USD",
+                    'transaction_details'  => 'Details ',
+                    'transaction_currency' => 'USD',
                 ],
                 [
-                    "transaction_details"  => "Details ",
-                    "transaction_currency" => "USD",
-                    "transaction_provider" => "Supermoney",
+                    'transaction_details'  => 'Details ',
+                    'transaction_currency' => 'USD',
+                    'transaction_provider' => 'Supermoney',
                 ],
             ],
         ];

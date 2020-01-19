@@ -1,141 +1,130 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Test\Unit\Controller\Transaction;
 
 use Kernolab\Controller\JsonResponse;
 use Kernolab\Controller\Transaction\Create;
-use Kernolab\Model\Entity\Transaction\Transaction;
-use Kernolab\Model\Entity\Transaction\TransactionRepository;
-use PHPUnit\Framework\TestCase;
+use Kernolab\Exception\ApiException;
+use Kernolab\Exception\HourlyTransactionException;
+use Kernolab\Exception\LifetimeTransactionAmountException;
 
-class CreateTest extends TestCase
+require_once('AbstractTransactionControllerTest.php');
+
+class CreateTest extends AbstractTransactionControllerTest
 {
-    private $mockController;
-    
     protected function setUp(): void
     {
-        $transaction = $this->createMock(Transaction::class);
-        $transaction->method("getEntityId")
-                    ->willReturn(1);
+        parent::setUp();
         
-        $repository = $this->createMock(TransactionRepository::class);
-        $repository->method("createTransaction")
-                   ->willReturn($transaction);
+        $hourlyTransactionException = $this->createStub(HourlyTransactionException::class);
+        $transactionService = $this->transactionService;
+        $hourlyTransactionClosure   = static function($userId) use ($hourlyTransactionException, $transactionService) {
+            if ((int)$userId === 2) {
+                throw $hourlyTransactionException;
+            }
+            
+            return $transactionService;
+        };
         
-        $this->mockController = $this->getMockBuilder(Create::class)
-                                     ->setMethods(["getTransactionCount", "canTransfer", "getTransactionFee"])
-                                     ->setConstructorArgs([new JsonResponse(), $repository])
-                                     ->getMock();
-    }
+        $lifetimeTransactionException = $this->createStub(LifetimeTransactionAmountException::class);
+        $lifetimeTransactionClosure   = static function($userId) use ($lifetimeTransactionException, $transactionService) {
+            if ((int)$userId === 3) {
+                throw $lifetimeTransactionException;
+            }
     
-    protected function tearDown(): void
-    {
-        $this->mockController = null;
-    }
-    
-    /**
-     * @runInSeparateProcess
-     */
-    public function testExecuteMissingArgs()
-    {
-        $input = [
-            "transaction_details"        => "",
-            "transaction_recipient_id"   => "",
-            "transaction_recipient_name" => "",
-            "transaction_amount"         => "",
-            "transaction_currency"       => "",
-        ];
+            return $transactionService;
+        };
         
-        $expected = '{"status":"error","errors":[{"code":400,"message":"Missing required argument user_id."}]}';
+        $this->transactionService->method('checkUserTransactionCount')
+                                 ->willReturnCallback($hourlyTransactionClosure);
+        $this->transactionService->method('checkUserLifetimeTransactionAmount')
+                                 ->willReturnCallback($lifetimeTransactionClosure);
+        $this->transactionService->method('setTransactionFee')
+                                 ->willReturn($transactionService);
+        $this->transactionService->method('createTransaction')
+                                 ->willReturn($this->transaction);
         
-        $this->expectOutputString($expected);
-        $this->mockController->execute($input);
-    }
-    
-    /**
-     * @runInSeparateProcess
-     */
-    public function testExecuteTransactionLimit()
-    {
-        $input = [
-            "user_id"                    => 1,
-            "transaction_details"        => "",
-            "transaction_recipient_id"   => "",
-            "transaction_recipient_name" => "",
-            "transaction_amount"         => "",
-            "transaction_currency"       => "",
-        ];
-        
-        $expected = '{"status":"error","errors":[{"code":403,"message":"Hourly transaction limit exceeded."}]}';
-        $this->mockController->expects($this->once())
-                             ->method("getTransactionCount")
-                             ->with(1)
-                             ->willReturn(11);
-        
-        $this->expectOutputString($expected);
-        $this->mockController->execute($input);
+        $this->controller = new Create(
+            new JsonResponse(),
+            $this->requestValidator,
+            $transactionService,
+            $this->exceptionHandler
+        );
     }
     
     /**
      * @runInSeparateProcess
      */
-    public function testExecuteLifetimeLimit()
+    public function testExecuteMissingArgs(): void
     {
         $input = [
-            "user_id"                    => 1,
-            "transaction_details"        => "",
-            "transaction_recipient_id"   => "",
-            "transaction_recipient_name" => "",
-            "transaction_amount"         => "",
-            "transaction_currency"       => "",
+            'transaction_details'        => '',
+            'transaction_recipient_id'   => '',
+            'transaction_recipient_name' => '',
+            'transaction_amount'         => '',
+            'transaction_currency'       => '',
         ];
         
-        $expected = '{"status":"error","errors":[{"code":403,"message":"Maximum lifetime transactions reached."}]}';
-        $this->mockController->expects($this->once())
-                             ->method("getTransactionCount")
-                             ->with(1)
-                             ->willReturn(7);
-        
-        $this->mockController->expects($this->once())
-                             ->method("canTransfer")
-                             ->with(1)
-                             ->willReturn(false);
-        
-        $this->expectOutputString($expected);
-        $this->mockController->execute($input);
+        $this->expectException(ApiException::class);
+        $this->controller->execute($input);
     }
     
     /**
      * @runInSeparateProcess
      */
-    public function testExecute()
+    public function testExecuteTransactionLimit(): void
     {
         $input = [
-            "user_id"                    => 1,
-            "transaction_details"        => "",
-            "transaction_recipient_id"   => "",
-            "transaction_recipient_name" => "",
-            "transaction_amount"         => 100,
-            "transaction_currency"       => "",
+            'user_id'                    => 2,
+            'transaction_details'        => '',
+            'transaction_recipient_id'   => '',
+            'transaction_recipient_name' => '',
+            'transaction_amount'         => '',
+            'transaction_currency'       => '',
         ];
         
-        $expected = '{"status":"success","code":200,"message":"Transaction created successfully.","entity_id":1}';
-        $this->mockController->expects($this->once())
-                             ->method("getTransactionCount")
-                             ->with(1)
-                             ->willReturn(7);
+        $this->expectException(ApiException::class);
+        $this->controller->execute($input);
+    }
+    
+    /**
+     * @runInSeparateProcess
+     */
+    public function testExecuteLifetimeLimit(): void
+    {
+        $input = [
+            'user_id'                    => 3,
+            'transaction_details'        => '',
+            'transaction_recipient_id'   => '',
+            'transaction_recipient_name' => '',
+            'transaction_amount'         => '',
+            'transaction_currency'       => '',
+        ];
         
-        $this->mockController->expects($this->once())
-                             ->method("canTransfer")
-                             ->with(1)
-                             ->willReturn(true);
+        $this->expectException(ApiException::class);
+        $this->controller->execute($input);
+    }
+    
+    /**
+     * @runInSeparateProcess
+     */
+    public function testExecute(): void
+    {
+        $input = [
+            'user_id'                    => 1,
+            'transaction_details'        => '',
+            'transaction_recipient_id'   => '',
+            'transaction_recipient_name' => '',
+            'transaction_amount'         => 100,
+            'transaction_currency'       => '',
+        ];
         
-        $this->mockController->expects($this->once())
-                             ->method("getTransactionFee")
-                             ->with(1, 100)
-                             ->willReturn(10.00);
+        $expected = new JsonResponse();
+        $expected->addField('status', 'success')
+                 ->addField('code', 200)
+                 ->addField('message', 'Transaction created successfully.')
+                 ->addField('entity_id', 1);
         
-        $this->expectOutputString($expected);
-        $this->mockController->execute($input);
+        $this->assertEquals($expected, $this->controller->execute($input));
     }
 }

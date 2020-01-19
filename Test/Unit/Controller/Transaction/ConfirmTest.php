@@ -1,82 +1,102 @@
-<?php
+<?php declare(strict_types = 1);
+
 namespace Test\Unit\Controller\Transaction;
 
 use Kernolab\Controller\JsonResponse;
 use Kernolab\Controller\Transaction\Confirm;
-use Kernolab\Model\Entity\Transaction\Transaction;
-use Kernolab\Model\Entity\Transaction\TransactionRepository;
-use PHPUnit\Framework\TestCase;
+use Kernolab\Exception\ApiException;
+use Kernolab\Exception\EntityNotFoundException;
+use Kernolab\Exception\TransactionConfirmationException;
 
-class ConfirmTest extends TestCase
+require_once('AbstractTransactionControllerTest.php');
+
+class ConfirmTest extends AbstractTransactionControllerTest
 {
-    private $controller;
-    
     protected function setUp(): void
     {
-        $transaction = $this->createMock(Transaction::class);
-        $transaction->method("getEntityId")
-                    ->willReturn(1);
+        parent::setUp();
         
-        $map = [
-          [1, $transaction],
-          [100, null]
-        ];
+        $entityNotFoundException          = $this->createStub(EntityNotFoundException::class);
+        $transactionConfirmationException = $this->createStub(TransactionConfirmationException::class);
+        $transaction = $this->transaction;
+        $this->transactionService->method('confirmTransaction')
+                           ->willReturnCallback(static function($entityId, $verificationCode)
+                           use ($transaction, $entityNotFoundException, $transactionConfirmationException) {
+                               if ((int)$entityId !== 1) {
+                                   throw $entityNotFoundException;
+                               }
+            
+                               if ((int)$verificationCode !== 111) {
+                                   throw $transactionConfirmationException;
+                               }
+            
+                               return $transaction;
+                           }
+                           );
         
-        $repository = $this->createMock(TransactionRepository::class);
-        $repository->method("confirmTransaction")
-                   ->will($this->returnValueMap($map));
-        
-        $this->controller = new Confirm(new JsonResponse(), $repository);
-    }
-    
-    protected function tearDown(): void
-    {
-        $this->controller = null;
+        $this->controller = new Confirm(
+            new JsonResponse(),
+            $this->requestValidator,
+            $this->transactionService,
+            $this->exceptionHandler
+        );
     }
     
     /**
      * @runInSeparateProcess
-     * @dataProvider executeProvider
-     *
-     * @param $input
-     * @param $expected
      */
-    public function testExecute($input, $expected)
+    public function testExecuteSuccess(): void
     {
-        $this->expectOutputString($expected);
+        $input               = [
+            'entity_id'         => '1',
+            'verification_code' => '111',
+        ];
+        $jsonSuccessResponse = new JsonResponse();
+        $jsonSuccessResponse->addField('status', 'success')
+                            ->addField('code', 200)
+                            ->addField('message', 'Transaction 1 confirmed successfully.');
+        
+        $this->assertEquals($jsonSuccessResponse, $this->controller->execute($input));
+    }
+    
+    /**
+     * @runInSeparateProcess
+     */
+    public function testExecuteValidationException(): void
+    {
+        $input = [
+            'entity_id'         => '1',
+            'verification_code' => '112',
+        ];
+        
+        $this->expectException(ApiException::class);
         $this->controller->execute($input);
     }
     
-    public function executeProvider()
+    /**
+     * @runInSeparateProcess
+     */
+    public function testExecuteRequestParameterException(): void
     {
-        return [
-            "success" => [
-                [
-                    "entity_id"         => "1",
-                    "verification_code" => "111",
-                ],
-                '{"status":"success","code":"200","message":"Transaction 1 confirmed successfully."}',
-            ],
-            "validation fails" => [
-                [
-                    "entity_id"         => "1",
-                    "verification_code" => "112",
-                ],
-                '{"status":"error","errors":[{"code":401,"message":"Invalid verification code"}]}',
-            ],
-            "missing params" => [
-                [
-                    "entity_id" => "1",
-                ],
-                '{"status":"error","errors":[{"code":400,"message":"Missing required argument verification_code."}]}',
-            ],
-            "entity does not exist" => [
-                [
-                    "entity_id" => "100",
-                    "verification_code" => "111",
-                ],
-                '{"status":"error","errors":[{"code":404,"message":"Transaction ID 100 is already confirmed or does not exist"}]}',
-            ],
+        $input = [
+            'entity_id'         => '1',
         ];
+        
+        $this->expectException(ApiException::class);
+        $this->controller->execute($input);
+    }
+    
+    /**
+     * @runInSeparateProcess
+     */
+    public function testExecuteEntityNotFoundException(): void
+    {
+        $input = [
+            'entity_id'         => '100',
+            'verification_code' => '111',
+        ];
+        
+        $this->expectException(ApiException::class);
+        $this->controller->execute($input);
     }
 }

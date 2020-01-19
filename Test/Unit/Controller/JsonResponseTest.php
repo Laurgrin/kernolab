@@ -1,10 +1,5 @@
-<?php
-/**
- * Created by PhpStorm.
- * User: Laurynas
- * Date: 2019-12-24
- * Time: 15:59
- */
+<?php declare(strict_types = 1);
+
 namespace Test\Unit\Controller;
 
 use Kernolab\Controller\JsonResponse;
@@ -27,38 +22,38 @@ class JsonResponseTest extends TestCase
     /**
      * @runInSeparateProcess
      */
-    public function testAddField()
+    public function testAddField(): void
     {
-        $this->jsonResponse->addField("key", "value");
+        $this->jsonResponse->addField('key', 'value');
         $this->assertEquals('{"key":"value"}', $this->jsonResponse->getResponse());
     }
     
     /**
      * @runInSeparateProcess
      */
-    public function testAddFieldMultiple()
+    public function testAddFieldMultiple(): void
     {
-        $this->jsonResponse->addField("key", "value");
-        $this->jsonResponse->addField("key2", "value2");
+        $this->jsonResponse->addField('key', 'value');
+        $this->jsonResponse->addField('key2', 'value2');
         $this->assertEquals('{"key":"value","key2":"value2"}', $this->jsonResponse->getResponse());
     }
     
     /**
      * @runInSeparateProcess
      */
-    public function testAddFieldArray()
+    public function testAddFieldArray(): void
     {
-        $this->jsonResponse->addField("key", ["value1", "value2", "value3"]);
+        $this->jsonResponse->addField('key', ['value1', 'value2', 'value3']);
         $this->assertEquals('{"key":["value1","value2","value3"]}', $this->jsonResponse->getResponse());
     }
     
     /**
      * @runInSeparateProcess
      */
-    public function testAddError()
+    public function testAddError(): void
     {
-        $this->jsonResponse->addError(500, "Error");
-        $this->assertEquals('{"status":"error","errors":[{"code":500,"message":"Error"}]}',
+        $this->jsonResponse->addError(500, 'Error');
+        $this->assertEquals('{"status":"error","code":500,"message":"Error"}',
             $this->jsonResponse->getResponse()
         );
     }

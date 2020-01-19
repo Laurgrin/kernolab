@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Test\Unit\Model\DataSource\MySql;
 
@@ -31,7 +31,7 @@ class QueryGeneratorTest extends TestCase
      *
      * @throws \Kernolab\Exception\UnknownOperandException
      */
-    public function testParseCriteria($target, $input, $expected)
+    public function testParseCriteria($target, $input, $expected): void
     {
         $result = $this->criteria->parseRetrieval($target, $input);
         
@@ -42,44 +42,44 @@ class QueryGeneratorTest extends TestCase
      * @runInSeparateProcess
      * @throws \Kernolab\Exception\UnknownOperandException
      */
-    public function testParseCriteriaException()
+    public function testParseCriteriaException(): void
     {
-        $input = [new Criteria("id", "ez", 3),];
+        $input = [new Criteria('id', 'ez', 3),];
         
         $this->expectException(UnknownOperandException::class);
-        $this->criteria->parseRetrieval( "mock_table", $input);
+        $this->criteria->parseRetrieval('mock_table', $input);
     }
     
-    public function parseCriteriaProvider()
+    public function parseCriteriaProvider(): array
     {
         return [
-            "zero criteria" => [
-                "mock_table",
+            'zero criteria'     => [
+                'mock_table',
                 [],
                 [
-                    "query" => "SELECT * FROM `mock_table`",
-                    "args"  => [],
+                    'query' => 'SELECT * FROM `mock_table`',
+                    'args'  => [],
                 ]
             ],
-            "one criteria" => [
-                "mock_table",
+            'one criteria'      => [
+                'mock_table',
                 [
-                    new Criteria("id", "eq", 3),
+                    new Criteria('id', 'eq', 3),
                 ],
                 [
-                    "query" => "SELECT * FROM `mock_table` WHERE `id` = ?",
-                    "args"  => ["id" => 3],
+                    'query' => 'SELECT * FROM `mock_table` WHERE `id` = ?',
+                    'args'  => ['id' => 3],
                 ],
             ],
-            "multiple criteria" => [
-                "mock_table",
+            'multiple criteria' => [
+                'mock_table',
                 [
-                    new Criteria("id", "eq", 3),
-                    new Criteria("sex", "eq", "male")
+                    new Criteria('id', 'eq', 3),
+                    new Criteria('gender', 'eq', 'male')
                 ],
                 [
-                    "query" => "SELECT * FROM `mock_table` WHERE `id` = ? AND `sex` = ?",
-                    "args"  => ["id" => 3, "sex" => "male"],
+                    'query' => 'SELECT * FROM `mock_table` WHERE `id` = ? AND `sex` = ?',
+                    'args'  => ['id' => 3, 'gender' => 'male'],
                 ],
             ]
         ];
@@ -94,35 +94,35 @@ class QueryGeneratorTest extends TestCase
      * @param $skipEntityId
      * @param $expected
      */
-    public function testParseInsertion($target, $columns, $skipEntityId, $expected)
+    public function testParseInsertion($target, $columns, $skipEntityId, $expected): void
     {
         $result = $this->criteria->parseInsertion($target, $columns, $skipEntityId);
         
         $this->assertEquals($expected, $result);
     }
     
-    public function parseInsertionProvider()
+    public function parseInsertionProvider(): array
     {
         return [
             [
-                "mock_table",
+                'mock_table',
                 [
-                    "col1",
-                    "col2"
+                    'col1',
+                    'col2'
                 ],
                 false,
-                "INSERT INTO `mock_table` (`col1`, `col2`) VALUES (?, ?)" .
-                " ON DUPLICATE KEY UPDATE `col1` = VALUES(`col1`), `col2` = VALUES(`col2`)"
+                'INSERT INTO `mock_table` (`col1`, `col2`) VALUES (?, ?)' .
+                ' ON DUPLICATE KEY UPDATE `col1` = VALUES(`col1`), `col2` = VALUES(`col2`)'
             ],
             [
-                "mock_table",
+                'mock_table',
                 [
-                    "col1",
-                    "col2"
+                    'col1',
+                    'col2'
                 ],
                 true,
-                "INSERT INTO `mock_table` (`col2`) VALUES (?)" .
-                " ON DUPLICATE KEY UPDATE `col2` = VALUES(`col2`)"
+                'INSERT INTO `mock_table` (`col2`) VALUES (?)' .
+                ' ON DUPLICATE KEY UPDATE `col2` = VALUES(`col2`)'
             ]
         ];
     }

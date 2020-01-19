@@ -38,12 +38,9 @@ class JsonResponse
     public function addError(int $code, string $message): JsonResponse
     {
         
-        $this->response['status']   = 'error';
-        $this->response['code']     = $code;
-        $this->response['errors'][] = [
-            'code'    => $code,
-            'message' => $message,
-        ];
+        $this->response['status']  = 'error';
+        $this->response['code']    = $code;
+        $this->response['message'] = $message;
         
         return $this;
     }
@@ -64,20 +61,5 @@ class JsonResponse
         $this->response = [];
         
         return $response;
-    }
-    
-    /**
-     * Gets the HTTP status code
-     *
-     * @return int
-     * @throws \Kernolab\Exception\StatusCodeException
-     */
-    public function getStatusCode(): int
-    {
-        if (array_key_exists('status', $this->response)) {
-            return (int)$this->response['status'];
-        }
-        
-        throw new StatusCodeException('Status code is not set or is invalid.');
     }
 }

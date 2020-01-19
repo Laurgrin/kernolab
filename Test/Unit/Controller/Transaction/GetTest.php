@@ -1,84 +1,98 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace Test\Unit\Controller\Transaction;
 
 use Kernolab\Controller\JsonResponse;
 use Kernolab\Controller\Transaction\Get;
-use Kernolab\Model\Entity\Transaction\Transaction;
+use Kernolab\Exception\ApiException;
+use Kernolab\Exception\EntityNotFoundException;
 use Kernolab\Model\Entity\Transaction\TransactionRepository;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Util\Json;
 
-class GetTest extends TestCase
+require_once('AbstractTransactionControllerTest.php');
+
+class GetTest extends AbstractTransactionControllerTest
 {
-    private $mockController;
-    
     protected function setUp(): void
     {
-        $transaction = $this->createStub(Transaction::class);
-        $transaction->method("getEntityId")->willReturn(1);
-        $transaction->method("getUserId")->willReturn(1);
-        $transaction->method("getTransactionStatus")->willReturn("status");
-        $transaction->method("getTransactionFee")->willReturn(1.00);
-        $transaction->method("getCreatedAt")->willReturn("123");
-        $transaction->method("getUpdatedAt")->willReturn("456");
-        $transaction->method("getTransactionProvider")->willReturn("provider");
-        $transaction->method("getTransactionAmount")->willReturn(10.00);
-        $transaction->method("getTransactionRecipientId")->willReturn(2);
-        $transaction->method("getTransactionRecipientName")->willReturn("name");
-        $transaction->method("getTransactionCurrency")->willReturn("currency");
-        $transaction->method("getTransactionDetails")->willReturn("details");
+        parent::setUp();
         
-        $map = [
-            [1, $transaction],
-            [2, null]
-        ];
+        $this->transaction->method('getEntityId')->willReturn(1);
+        $this->transaction->method('getUserId')->willReturn(1);
+        $this->transaction->method('getTransactionStatus')->willReturn('status');
+        $this->transaction->method('getTransactionFee')->willReturn(1.00);
+        $this->transaction->method('getCreatedAt')->willReturn('123');
+        $this->transaction->method('getUpdatedAt')->willReturn('456');
+        $this->transaction->method('getTransactionProvider')->willReturn('provider');
+        $this->transaction->method('getTransactionAmount')->willReturn(10.00);
+        $this->transaction->method('getTransactionRecipientId')->willReturn(2);
+        $this->transaction->method('getTransactionRecipientName')->willReturn('name');
+        $this->transaction->method('getTransactionCurrency')->willReturn('currency');
+        $this->transaction->method('getTransactionDetails')->willReturn('details');
         
-        $repository = $this->createStub(TransactionRepository::class);
-        $repository->method("getTransactionByEntityId")->will($this->returnValueMap($map));
+        $transaction = $this->transaction;
+        $exception   = $this->createStub(EntityNotFoundException::class);
         
-        $this->mockController = $this->getMockBuilder(Get::class)
-                                     ->setMethodsExcept(["execute"])
-                                     ->setConstructorArgs([new JsonResponse(), $repository])
-                                     ->getMock();
-    }
-    
-    protected function tearDown(): void
-    {
-        $this->mockController = null;
+        $this->transactionService->method('getTransactionByEntityId')
+                                 ->willReturnCallback(static function($entityId) use ($transaction, $exception) {
+                                     if ((int)$entityId === 1) {
+                                         return $transaction;
+                                     }
+            
+                                     throw $exception;
+                                 }
+                                 );
+        
+        $this->controller = new Get(
+            new JsonResponse(),
+            $this->requestValidator,
+            $this->transactionService,
+            $this->exceptionHandler
+        );
     }
     
     /**
-     * @dataProvider executeProvider
-     *
-     * @param $input
-     * @param $expected
-     *
      * @runInSeparateProcess
      */
-    public function testExecute($input, $expected)
+    public function testExecuteMissingParams(): void
     {
-        $this->expectOutputString($expected);
-        $this->mockController->execute($input);
+        $input = [];
+        
+        $this->expectException(ApiException::class);
+        $this->controller->execute($input);
     }
     
-    public function executeProvider()
+    /**
+     * @runInSeparateProcess
+     */
+    public function testExecuteNotFound(): void
     {
-        return [
-            "missing params" => [
-                ["dummy" => "mock"],
-                '{"status":"error","errors":[{"code":400,"message":"Missing required argument entity_id."}]}',
-            ],
-            "success"        => [
-                ["entity_id" => 1],
-                '{"entity_id":1,"user_id":1,"transaction_status":"status","transaction_fee":1,' .
-                '"created_at":"123","updated_at":"456","transaction_provider":"provider","transaction_amount":10,' .
-                '"transaction_recipient_id":2,"transaction_recipient_name":"name","transaction_currency":"currency",' .
-                '"transaction_details":"details"}',
-            ],
-            "not found"      => [
-                ["entity_id" => 2],
-                '{"status":"error","errors":[{"code":404,"message":"Transaction with the id 2 not found"}]}',
-            ],
-        ];
+        $input = ['entity_id' => 2];
+    
+        $this->expectException(ApiException::class);
+        $this->controller->execute($input);
+    }
+    
+    /**
+     * @runInSeparateProcess
+     */
+    public function testExecute()
+    {
+        $input = ['entity_id' => 1];
+        $expected = new JsonResponse();
+        $expected->addField('entity_id', $this->transaction->getEntityId())
+                 ->addField('user_id', $this->transaction->getUserId())
+                 ->addField('transaction_status', $this->transaction->getTransactionStatus())
+                 ->addField('transaction_fee', $this->transaction->getTransactionFee())
+                 ->addField('created_at', $this->transaction->getCreatedAt())
+                 ->addField('updated_at', $this->transaction->getUpdatedAt())
+                 ->addField('transaction_provider', $this->transaction->getTransactionProvider())
+                 ->addField('transaction_amount', $this->transaction->getTransactionAmount())
+                 ->addField('transaction_recipient_id', $this->transaction->getTransactionRecipientId())
+                 ->addField('transaction_recipient_name', $this->transaction->getTransactionRecipientName())
+                 ->addField('transaction_currency', $this->transaction->getTransactionCurrency())
+                 ->addField('transaction_details', $this->transaction->getTransactionDetails());
+        
+        $this->assertEquals($expected, $this->controller->execute($input));
     }
 }
