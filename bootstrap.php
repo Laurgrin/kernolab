@@ -3,6 +3,7 @@
 define('ROOT_PATH', realpath(__DIR__));
 define('ENV_PATH', ROOT_PATH . '/config/.env');
 define('ROUTE_PATH', ROOT_PATH . '/config/routing.json');
+define('PROVIDER_PATH', ROOT_PATH . '/config/providers.json');
 define('DI_PATH', ROOT_PATH . '/config/di.json');
 define('LOG_PATH', ROOT_PATH . '/var/log/');
 

@@ -17,6 +17,7 @@ use Kernolab\Exception\TransactionConfirmationException;
 use Kernolab\Exception\TransactionCreationException;
 use Kernolab\Exception\UndefinedRouteException;
 use ReflectionException;
+use TypeError;
 
 class ExceptionHandler
 {
@@ -117,7 +118,7 @@ class ExceptionHandler
      * @param \TypeError                        $error
      * @param \Kernolab\Controller\JsonResponse $jsonResponse
      */
-    public function handleTypeError(\TypeError $error, JsonResponse $jsonResponse): void
+    public function handleTypeError(TypeError $error, JsonResponse $jsonResponse): void
     {
         $jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
         $this->logger->log(Logger::SEVERITY_ERROR, $error->getMessage());

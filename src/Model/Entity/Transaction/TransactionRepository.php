@@ -156,7 +156,7 @@ class TransactionRepository implements TransactionRepositoryInterface
     public function processTransactions(int $limit = 0): array
     {
         $criteria[]          = new Criteria('transaction_status', 'eq', self::STATUS_CONFIRMED);
-        $entityData          = $this->dataSource->get($criteria, 'transaction');
+        $entityData          = $this->dataSource->get($criteria, self::ENTITY_TABLE);
         $count               = 0;
         $updatedTransactions = [];
         

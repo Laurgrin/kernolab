@@ -117,14 +117,14 @@ class TransactionService
     public function setTransactionFee(int $userId, array &$requestParams): TransactionService
     {
         /** @var \Kernolab\Model\Entity\Transaction\Transaction[] $transactions */
-        $transactions = $this->transactionRepository->getTransactionsByUserId($userId);
+        $transactions      = $this->transactionRepository->getTransactionsByUserId($userId);
         $transactionAmount = $requestParams['transaction_amount'];
         try {
             $now = new \DateTime();
         } catch (\Exception $e) {
             throw new DateTimeException($e->getMessage());
         }
-    
+        
         /* Filters out the transactions not made today */
         $dailyTransactions = array_filter($transactions, static function($transaction) use ($now) {
             /** @var \Kernolab\Model\Entity\Transaction\Transaction $transaction */
@@ -145,11 +145,13 @@ class TransactionService
             $amountsByCurrency[$dailyTransaction->getTransactionCurrency()] += $dailyTransaction->getTransactionAmount();
             if ($amountsByCurrency[$dailyTransaction->getTransactionCurrency()] >= 100) {
                 $requestParams['transaction_fee'] = $transactionAmount * 0.05;
+                
                 return $this;
             }
         }
-    
+        
         $requestParams['transaction_fee'] = $transactionAmount * 0.1;
+        
         return $this;
     }
     
@@ -207,5 +209,19 @@ class TransactionService
     public function getTransactionByEntityId(int $entityId): Transaction
     {
         return $this->transactionRepository->getTransactionByEntityId($entityId);
+    }
+    
+    /**
+     * Processes transactions
+     *
+     * @param int $limit
+     *
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
+     * @throws \Kernolab\Exception\MySqlConnectionException
+     * @throws \Kernolab\Exception\MySqlPreparedStatementException
+     */
+    public function processTransaction(int $limit = 0): void
+    {
+        $this->transactionRepository->processTransactions($limit);
     }
 }

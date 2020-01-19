@@ -1,6 +1,8 @@
-<?php  declare(strict_types = 1);
+<?php declare(strict_types = 1);
 
 namespace Kernolab\Model\Entity\Transaction;
+
+use Kernolab\Exception\ConfigurationFileNotFoundException;
 
 class TransactionProviderRule implements TransactionProviderRuleInterface
 {
@@ -10,11 +12,30 @@ class TransactionProviderRule implements TransactionProviderRuleInterface
     protected $providers;
     
     /**
-     * TransactionProviderRule constructor.
+     * Gets the provider file.
+     *
+     * @return array
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
+     * @throws \JsonException
      */
-    public function __construct()
+    protected function getProviders(): array
     {
-        $this->providers = json_decode(file_get_contents(__DIR__ . "/providers.json"), true);
+        if ($this->providers === null) {
+            if (!is_readable(PROVIDER_PATH)) {
+                throw new ConfigurationFileNotFoundException(
+                    'Provider configuration file not found or is not readable.'
+                );
+            }
+            
+            $this->providers = json_decode(
+                file_get_contents(PROVIDER_PATH),
+                true,
+                512,
+                JSON_THROW_ON_ERROR
+            );
+        }
+        
+        return $this->providers;
     }
     
     /**
@@ -23,15 +44,20 @@ class TransactionProviderRule implements TransactionProviderRuleInterface
      * @param array $params
      *
      * @return array
+     * @throws \JsonException
+     * @throws \Kernolab\Exception\ConfigurationFileNotFoundException
+     * @throws \Exception
      */
     public function applyProviderRules(array $params): array
     {
-        $currency = $params["transaction_currency"];
-        if (array_key_exists($currency, $this->providers)) {
-            return $this->applyRuleset($this->providers[$currency], $params);
-        } else {
-            return $this->applyRuleset($this->providers["Default"], $params);
+        $providers = $this->getProviders();
+        
+        $currency = $params['transaction_currency'];
+        if (array_key_exists($currency, $providers)) {
+            return $this->applyRuleset($providers[$currency], $params);
         }
+        
+        return $this->applyRuleset($providers['Default'], $params);
     }
     
     /**
@@ -41,17 +67,18 @@ class TransactionProviderRule implements TransactionProviderRuleInterface
      * @param array $params  an associative array of the entity data
      *
      * @return array
+     * @throws \Exception
      */
     protected function applyRuleset(array $ruleSet, array $params): array
     {
-        $params["transaction_provider"] = $ruleSet["name"];
-        foreach ($ruleSet["rules"] as $rule) {
-            switch ($rule["rule"]) {
-                case "length":
-                    $params[$rule["field"]] = substr($params[$rule["field"]], 0, $rule["value"]);
+        $params['transaction_provider'] = $ruleSet['name'];
+        foreach ($ruleSet['rules'] as $rule) {
+            switch ($rule['rule']) {
+                case 'length':
+                    $params[$rule['field']] = substr($params[$rule['field']], 0, $rule['value']);
                     break;
-                case "random_int":
-                    $params[$rule["field"]] .= rand(0, $rule["value"]);
+                case 'random_int':
+                    $params[$rule['field']] .= random_int(0, $rule['value']);
                     break;
             }
         }
