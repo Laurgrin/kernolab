@@ -59,7 +59,7 @@ class TransactionService
             
             /* We have to check all time units above hours as well, since the next year at the same hour would make the
             hour difference 0 */
-            if ($timeDifference->y > 0 || $timeDifference->m > 0 || $timeDifference->d > 0 || $timeDifference->h >= 1) {
+            if ($timeDifference->y < 1 && $timeDifference->m < 1 && $timeDifference->d < 1 && $timeDifference->h <= 1) {
                 $count++;
             }
         }
