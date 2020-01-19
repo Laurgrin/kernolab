@@ -17,6 +17,7 @@ class Router extends AbstractRouter
      * @param string $requestMethod
      *
      * @return void
+     * @throws \Kernolab\Exception\ApiException
      */
     public function route(string $requestUri, string $requestMethod): void
     {

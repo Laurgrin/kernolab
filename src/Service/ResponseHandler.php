@@ -24,6 +24,7 @@ class ResponseHandler
     public function handleResponse(JsonResponse $response): void
     {
         try {
+            http_response_code($response->getStatusCode());
             echo $response->getResponse();
         } catch (\JsonException $e) {
             echo '{ "status": "error", "errors":
