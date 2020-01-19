@@ -30,6 +30,7 @@ class Create extends AbstractTransactionController
      * @param array $requestParams
      *
      * @return \Kernolab\Controller\JsonResponse
+     * @throws \Kernolab\Exception\ApiException
      */
     public function execute(array $requestParams): JsonResponse
     {
@@ -47,25 +48,25 @@ class Create extends AbstractTransactionController
                                ->addField('message', 'Transaction created successfully.')
                                ->addField('entity_id', $transaction->getEntityId());
         } catch (RequestParameterException $e) {
-            $this->controllerExceptionHandler->handleRequestParameterException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleRequestParameterException($e);
         } catch (DateTimeException $e) {
-            $this->controllerExceptionHandler->handleDateTimeException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleDateTimeException($e);
         } catch (HourlyTransactionException $e) {
-            $this->controllerExceptionHandler->handleHourlyTransactionException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleHourlyTransactionException($e);
         } catch (LifetimeTransactionAmountException $e) {
-            $this->controllerExceptionHandler->handleLifetimeTransactionAmountException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleLifetimeTransactionAmountException($e);
         } catch (TransactionCreationException $e) {
-            $this->controllerExceptionHandler->handleTransactionCreationException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleTransactionCreationException($e);
         } catch (MySqlPreparedStatementException $e) {
-            $this->controllerExceptionHandler->handleMySqlPreparedStatementException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleMySqlPreparedStatementException($e);
         } catch (\TypeError $e) {
-            $this->controllerExceptionHandler->handleTypeError($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleTypeError($e);
         } catch (MySqlConnectionException $e) {
-            $this->controllerExceptionHandler->handleMySqlConnectionException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleMySqlConnectionException($e);
         } catch (ConfigurationFileNotFoundException $e) {
-            $this->controllerExceptionHandler->handleConfigurationFileNotFoundException($e, $this->jsonResponse);
-        } finally {
-            return $this->jsonResponse;
+            $this->controllerExceptionHandler->handleConfigurationFileNotFoundException($e);
         }
+        
+        return $this->jsonResponse;
     }
 }

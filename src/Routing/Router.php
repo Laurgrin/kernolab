@@ -2,6 +2,7 @@
 
 namespace Kernolab\Routing;
 
+use Kernolab\Exception\ApiException;
 use Kernolab\Exception\ConfigurationFileNotFoundException;
 use Kernolab\Exception\ContainerException;
 use Kernolab\Exception\UndefinedRouteException;
@@ -24,15 +25,17 @@ class Router extends AbstractRouter
             $controller         = $this->container->get(self::CONTROLLER_NAMESPACE . $request->getController());
             $this->jsonResponse = $controller->execute($request->getRequestParams());
         } catch (ContainerException $e) {
-            $this->exceptionHandler->handleContainerException($e, $this->jsonResponse);
+            $this->exceptionHandler->handleContainerException($e);
         } catch (ReflectionException $e) {
-            $this->exceptionHandler->handleReflectionException($e, $this->jsonResponse);
+            $this->exceptionHandler->handleReflectionException($e);
         } catch (\JsonException $e) {
-            $this->exceptionHandler->handleJsonException($e, $this->jsonResponse);
+            $this->exceptionHandler->handleJsonException($e);
         } catch (ConfigurationFileNotFoundException $e) {
-            $this->exceptionHandler->handleConfigurationFileNotFoundException($e, $this->jsonResponse);
+            $this->exceptionHandler->handleConfigurationFileNotFoundException($e);
         } catch (UndefinedRouteException $e) {
-            $this->exceptionHandler->handleUndefinedRouteException($e, $this->jsonResponse);
+            $this->exceptionHandler->handleUndefinedRouteException($e);
+        } catch (ApiException $e) {
+            $this->jsonResponse->addError($e->getCode(), $e->getMessage());
         } finally {
             $this->responseHandler->handleResponse($this->jsonResponse);
         }

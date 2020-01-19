@@ -4,6 +4,7 @@ namespace Kernolab\Service;
 
 use JsonException;
 use Kernolab\Controller\JsonResponse;
+use Kernolab\Exception\ApiException;
 use Kernolab\Exception\ConfigurationFileNotFoundException;
 use Kernolab\Exception\ContainerException;
 use Kernolab\Exception\DateTimeException;
@@ -21,6 +22,8 @@ use TypeError;
 
 class ExceptionHandler
 {
+    protected const INTERNAL_ERROR = 'An internal error has occurred while processing the request.';
+    
     /**
      * @var \Kernolab\Service\Logger
      */
@@ -35,191 +38,187 @@ class ExceptionHandler
      * Handles the RequestParameterException
      *
      * @param \Kernolab\Exception\RequestParameterException $exception
-     * @param \Kernolab\Controller\JsonResponse             $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleRequestParameterException(
-        RequestParameterException $exception,
-        JsonResponse $jsonResponse
-    ): void {
+    public function handleRequestParameterException(RequestParameterException $exception): void {
+        $missingKeys = '';
         foreach ($exception->getMissingKeys() as $missingKey) {
-            $jsonResponse->addError(400, sprintf('Missing required key %s', $missingKey));
+            $missingKeys .= sprintf('%s, ', $missingKey);
         }
+        
+        $message = sprintf('Missing required keys %s', $missingKeys);
+        
+        throw new ApiException($message, 400);
     }
     
     /**
      * Handles the DateTimeException
      *
      * @param \Kernolab\Exception\DateTimeException $exception
-     * @param \Kernolab\Controller\JsonResponse     $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleDateTimeException(DateTimeException $exception, JsonResponse $jsonResponse): void
+    public function handleDateTimeException(DateTimeException $exception): void
     {
-        $jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
         $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+        throw new ApiException(self::INTERNAL_ERROR, 500);
     }
     
     /**
      * Handles the HourlyTransactionException
      *
      * @param \Kernolab\Exception\HourlyTransactionException $exception
-     * @param \Kernolab\Controller\JsonResponse              $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleHourlyTransactionException(
-        HourlyTransactionException $exception,
-        JsonResponse $jsonResponse
-    ): void {
-        $jsonResponse->addError(403, $exception->getMessage());
+    public function handleHourlyTransactionException(HourlyTransactionException $exception): void {
+        throw new ApiException($exception->getMessage(), 403);
     }
     
     /**
      * Handles the LifetimeTransactionAmountException
      *
      * @param \Kernolab\Exception\LifetimeTransactionAmountException $exception
-     * @param \Kernolab\Controller\JsonResponse                      $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleLifetimeTransactionAmountException(
-        LifetimeTransactionAmountException $exception,
-        JsonResponse $jsonResponse
-    ): void {
-        $jsonResponse->addError(403, $exception->getMessage());
+    public function handleLifetimeTransactionAmountException(LifetimeTransactionAmountException $exception): void {
+        throw new ApiException($exception->getMessage(), 403);
     }
     
     /**
      * Handles the TransactionCreationException
      *
      * @param \Kernolab\Exception\TransactionCreationException $exception
-     * @param \Kernolab\Controller\JsonResponse                $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleTransactionCreationException(
-        TransactionCreationException $exception,
-        JsonResponse $jsonResponse
-    ): void {
-        $jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
+    public function handleTransactionCreationException(TransactionCreationException $exception): void {
         $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+        throw new ApiException(self::INTERNAL_ERROR, 500);
     }
     
     /**
      * Handles the MySqlPreparedStatementException
      *
      * @param \Kernolab\Exception\MySqlPreparedStatementException $exception
-     * @param \Kernolab\Controller\JsonResponse                   $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleMySqlPreparedStatementException(
-        MySqlPreparedStatementException $exception,
-        JsonResponse $jsonResponse
-    ): void {
-        $jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
+    public function handleMySqlPreparedStatementException(MySqlPreparedStatementException $exception): void {
         $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+        throw new ApiException(self::INTERNAL_ERROR, 500);
     }
     
     /**
      * Handles the TypeError
      *
-     * @param \TypeError                        $error
-     * @param \Kernolab\Controller\JsonResponse $jsonResponse
+     * @param \TypeError $error
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleTypeError(TypeError $error, JsonResponse $jsonResponse): void
+    public function handleTypeError(TypeError $error): void
     {
-        $jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
         $this->logger->log(Logger::SEVERITY_ERROR, $error->getMessage());
+        throw new ApiException(self::INTERNAL_ERROR, 500);
     }
     
     /**
      * Handles the TransactionConfirmationException
      *
      * @param \Kernolab\Exception\TransactionConfirmationException $exception
-     * @param \Kernolab\Controller\JsonResponse                    $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleTransactionConfirmationException(
-        TransactionConfirmationException $exception,
-        JsonResponse $jsonResponse
-    ): void {
-        $jsonResponse->addError(403, $exception->getMessage());
+    public function handleTransactionConfirmationException(TransactionConfirmationException $exception): void {
+        throw new ApiException($exception->getMessage(), 403);
     }
     
     /**
      * Handles the EntityNotFoundException
      *
      * @param \Kernolab\Exception\EntityNotFoundException $exception
-     * @param \Kernolab\Controller\JsonResponse           $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleEntityNotFoundException(EntityNotFoundException $exception, JsonResponse $jsonResponse): void
+    public function handleEntityNotFoundException(EntityNotFoundException $exception): void
     {
-        $jsonResponse->addError(404, $exception->getMessage());
+        throw new ApiException($exception->getMessage(), 404);
     }
     
     /**
      * Handles the MySqlConnectionException
      *
      * @param \Kernolab\Exception\MySqlConnectionException $exception
-     * @param \Kernolab\Controller\JsonResponse            $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleMySqlConnectionException(
-        MySqlConnectionException $exception,
-        JsonResponse $jsonResponse
-    ): void {
-        $jsonResponse->addError(500, 'An internal error has occurred while processing the request.');
+    public function handleMySqlConnectionException(MySqlConnectionException $exception): void {
         $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+        throw new ApiException(self::INTERNAL_ERROR, 500);
     }
     
     /**
      * Handles the ContainerException
      *
      * @param \Kernolab\Exception\ContainerException $exception
-     * @param \Kernolab\Controller\JsonResponse      $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleContainerException(ContainerException $exception, JsonResponse $jsonResponse): void
+    public function handleContainerException(ContainerException $exception): void
     {
-        $jsonResponse->addError(500, 'An internal error has been encountered.');
         $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+        throw new ApiException(self::INTERNAL_ERROR, 500);
     }
     
     /**
      * Handles the ReflectionException
      *
-     * @param \ReflectionException              $exception
-     * @param \Kernolab\Controller\JsonResponse $jsonResponse
+     * @param \ReflectionException $exception
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleReflectionException(ReflectionException $exception, JsonResponse $jsonResponse): void
+    public function handleReflectionException(ReflectionException $exception): void
     {
-        $jsonResponse->addError(500, 'An internal error has been encountered.');
         $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+        throw new ApiException(self::INTERNAL_ERROR, 500);
     }
     
     /**
      * Handles the JsonException. Yes, we are trying to return a json response if another fails.
      *
-     * @param \JsonException                    $exception
-     * @param \Kernolab\Controller\JsonResponse $jsonResponse
+     * @param \JsonException $exception
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleJsonException(JsonException $exception, JsonResponse $jsonResponse): void
+    public function handleJsonException(JsonException $exception): void
     {
-        $jsonResponse->addError(500, 'An internal error has been encountered.');
         $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+        throw new ApiException(self::INTERNAL_ERROR, 500);
     }
     
     /**
      * Handle the ConfigurationFileNotFoundException
      *
      * @param \Kernolab\Exception\ConfigurationFileNotFoundException $exception
-     * @param \Kernolab\Controller\JsonResponse                      $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleConfigurationFileNotFoundException(
-        ConfigurationFileNotFoundException $exception,
-        JsonResponse $jsonResponse
-    ): void {
-        $jsonResponse->addError(500, 'An internal error has been encountered.');
+    public function handleConfigurationFileNotFoundException(ConfigurationFileNotFoundException $exception): void {
         $this->logger->log(Logger::SEVERITY_ERROR, $exception->getMessage());
+        throw new ApiException(self::INTERNAL_ERROR, 500);
     }
     
     /**
      * Handle the UndefinedRouteException
      *
      * @param \Kernolab\Exception\UndefinedRouteException $exception
-     * @param \Kernolab\Controller\JsonResponse           $jsonResponse
+     *
+     * @throws \Kernolab\Exception\ApiException
      */
-    public function handleUndefinedRouteException(UndefinedRouteException $exception, JsonResponse $jsonResponse): void
+    public function handleUndefinedRouteException(UndefinedRouteException $exception): void
     {
-        $jsonResponse->addError(404, $exception->getMessage());
+        throw new ApiException($exception->getMessage(), 404);
     }
 }

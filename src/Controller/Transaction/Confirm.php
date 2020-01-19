@@ -20,6 +20,7 @@ class Confirm extends AbstractTransactionController
      * @param array $requestParams
      *
      * @return JsonResponse
+     * @throws \Kernolab\Exception\ApiException
      */
     public function execute(array $requestParams): JsonResponse
     {
@@ -36,21 +37,21 @@ class Confirm extends AbstractTransactionController
                                                    )
                                );
         } catch (RequestParameterException $e) {
-            $this->controllerExceptionHandler->handleRequestParameterException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleRequestParameterException($e);
         } catch (MySqlPreparedStatementException $e) {
-            $this->controllerExceptionHandler->handleMySqlPreparedStatementException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleMySqlPreparedStatementException($e);
         } catch (TransactionConfirmationException $e) {
-            $this->controllerExceptionHandler->handleTransactionConfirmationException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleTransactionConfirmationException($e);
         } catch (\TypeError $e) {
-            $this->controllerExceptionHandler->handleTypeError($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleTypeError($e);
         } catch (EntityNotFoundException $e) {
-            $this->controllerExceptionHandler->handleEntityNotFoundException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleEntityNotFoundException($e);
         } catch (MySqlConnectionException $e) {
-            $this->controllerExceptionHandler->handleMySqlConnectionException($e, $this->jsonResponse);
+            $this->controllerExceptionHandler->handleMySqlConnectionException($e);
         } catch (ConfigurationFileNotFoundException $e) {
-            $this->controllerExceptionHandler->handleConfigurationFileNotFoundException($e, $this->jsonResponse);
-        } finally {
-            return $this->jsonResponse;
+            $this->controllerExceptionHandler->handleConfigurationFileNotFoundException($e);
         }
+        
+        return $this->jsonResponse;
     }
 }

@@ -134,13 +134,12 @@ class TransactionRepository implements TransactionRepositoryInterface
     {
         $criteria   = new Criteria('entity_id', 'eq', $entityId);
         $entityData = $this->dataSource->get([$criteria], self::ENTITY_TABLE);
-        
-        $transaction = $this->createTransactionObject(reset($entityData));
-        if ($transaction === null) {
+    
+        if (empty($entityData)) {
             throw new EntityNotFoundException(Transaction::class, $entityId);
         }
-        
-        return $transaction;
+    
+        return $this->createTransactionObject(reset($entityData));
     }
     
     /**

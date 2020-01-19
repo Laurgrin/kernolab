@@ -15,6 +15,7 @@ interface ControllerInterface
      * @param array $requestParams
      *
      * @return JsonResponse
+     * @throws \Kernolab\Exception\ApiException
      */
     public function execute(array $requestParams): JsonResponse;
 }
